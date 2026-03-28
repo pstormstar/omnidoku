@@ -27,14 +27,13 @@ export async function POST(req: NextRequest) {
     
     // Build the command with metadata arguments
     // We escape double quotes to handle common text inputs
-    const pythonBin = process.env.VERCEL ? "python3" : (process.platform === "win32" ? "python" : "python3");
+    const pythonBin = process.platform === "win32" ? "python" : "python3";
     let cmd = `${pythonBin} "${scriptPath}" --image "${tempFilePath}" --prompt "${prompt.replace(/"/g, '\\"')}"`;
     
     if (apiKey) cmd += ` --api_key "${apiKey}"`;
     if (title) cmd += ` --title "${title.replace(/"/g, '\\"')}"`;
     if (author) cmd += ` --author "${author.replace(/"/g, '\\"')}"`;
     if (rules) {
-      // For massive rules text, we'll save it to a temp file and tell the script to read it
       const rulesPath = join(tmpDir, `rules_${Date.now()}.txt`);
       await writeFile(rulesPath, rules);
       cmd += ` --rules_file "${rulesPath}"`;
@@ -45,8 +44,44 @@ export async function POST(req: NextRequest) {
       cmd += ` --structure_file "${structurePath}"`;
     }
 
-    return new Promise<NextResponse>((resolve) => {
-      exec(cmd, { env: { ...process.env, PYTHONPATH: join(process.cwd(), ".python_packages") } }, async (error, stdout, stderr) => {
+    return new Promise<NextResponse>(async (resolve) => {
+      
+      if (process.env.VERCEL && process.env.VERCEL_URL) {
+          try {
+              const res = await fetch(`https://${process.env.VERCEL_URL}/api/bridge`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      script: "generate_thematic_image.py",
+                      image_base64: base64Data,
+                      prompt: prompt,
+                      api_key: apiKey,
+                      title: title,
+                      author: author,
+                      rules_content: rules,
+                      structure_content: structure
+                  })
+              });
+              const data = await res.json();
+              const stdout = data.stdout || "";
+              
+              const match = stdout.match(/IMAGE_SAVED: (.+)/);
+              if (match) {
+                 const generatedPath = match[1].strip ? match[1].strip() : match[1].trim();
+                 try {
+                     // Since bridge runs in Python Lambda, we cannot easily read the file back into JS base64 directly
+                     // UNLESS bridge returns the generated file natively.
+                 } catch(e) {}
+              }
+              resolve(NextResponse.json({ message: "Generated", output: stdout, error: data.error }));
+              return;
+          } catch(e: any) {
+              resolve(NextResponse.json({ error: e.message }, { status: 500 }));
+              return;
+          }
+      }
+
+      exec(cmd, async (error, stdout, stderr) => {
         // Cleanup
         try {
           await unlink(tempFilePath);

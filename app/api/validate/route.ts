@@ -22,11 +22,40 @@ export async function POST(req: NextRequest) {
 
     // Execute Python script
     const scriptPath = join(process.cwd(), "scripts", "validate_puzzle.py");
-    const pythonBin = process.env.VERCEL ? "python3" : (process.platform === "win32" ? "python" : "python3");
+    const pythonBin = process.platform === "win32" ? "python" : "python3";
     const cmd = `${pythonBin} "${scriptPath}" "${tempFilePath}"`;
 
-    return new Promise<NextResponse>((resolve) => {
-      exec(cmd, { env: { ...process.env, PYTHONPATH: join(process.cwd(), ".python_packages") } }, async (error, stdout, stderr) => {
+    return new Promise<NextResponse>(async (resolve) => {
+      
+      if (process.env.VERCEL && process.env.VERCEL_URL) {
+          try {
+              const res = await fetch(`https://${process.env.VERCEL_URL}/api/bridge`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      script: "validate_puzzle.py",
+                      file_content: JSON.stringify(puzzle)
+                  })
+              });
+              const data = await res.json();
+              const stdout = data.stdout || "";
+              const stderr = data.stderr || "";
+              
+              const isValid = !stdout.includes("❌ INVALID") && data.returncode == 0;
+              
+              resolve(NextResponse.json({ 
+                valid: isValid, 
+                message: isValid ? "Valid Puzzle" : (stdout.includes("❌ INVALID") ? "Puzzle Rules Violation" : "Validation Script Error"), 
+                output: stdout || stderr || data.error 
+              }));
+              return;
+         } catch(e: any) {
+              resolve(NextResponse.json({ error: e.message }, { status: 500 }));
+              return;
+         }
+      }
+
+      exec(cmd, async (error, stdout, stderr) => {
         // Clean up temp file
         try {
           await unlink(tempFilePath);
