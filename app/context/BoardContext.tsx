@@ -46,8 +46,8 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   const [isAddingGrid, setIsAddingGrid] = useState(false);
   const [placementPivot, setPlacementPivot] = useState<{ r: number; c: number } | null>(null);
   const [selectionMode, setSelectionMode] = useState<"grid" | "cell">("cell");
-  const [activeClueType, setActiveClueType] = useState<"X" | "V" | "Kropki" | "Inequality" | "Sandwich" | null>(null);
-  const [activeClueSubType, setActiveClueSubType] = useState<"black" | "white" | ">" | "<" | null>(null);
+  const [activeClueType, setActiveClueType] = useState<"X" | "V" | "Kropki" | "Inequality" | "Sandwich" | "Quadruple" | null>(null);
+  const [activeClueSubType, setActiveClueSubType] = useState<"black" | "white" | ">" | "<" | string | null>(null);
   const [clueSelectionFirst, setClueSelectionFirst] = useState<{ r: number; c: number } | null>(null);
   const [sandwichSum, setSandwichSum] = useState<number>(0);
   const [isPublishSidebarOpen, setIsPublishSidebarOpen] = useState(false);
