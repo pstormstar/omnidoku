@@ -23,10 +23,10 @@ interface BoardContextType {
   setSelectionMode: (mode: "grid" | "cell") => void;
   puzzle: PuzzleDef;
   setPuzzle: (puzzle: PuzzleDef | ((prev: PuzzleDef) => PuzzleDef)) => void;
-  activeClueType: "X" | "V" | "Kropki" | "Inequality" | "Sandwich" | null;
-  setActiveClueType: (type: "X" | "V" | "Kropki" | "Inequality" | "Sandwich" | null) => void;
-  activeClueSubType: "black" | "white" | ">" | "<" | null;
-  setActiveClueSubType: (subType: "black" | "white" | ">" | "<" | null) => void;
+  activeClueType: "X" | "V" | "Kropki" | "Inequality" | "Sandwich" | "Quadruple" | null;
+  setActiveClueType: (type: "X" | "V" | "Kropki" | "Inequality" | "Sandwich" | "Quadruple" | null) => void;
+  activeClueSubType: "black" | "white" | ">" | "<" | string | null;
+  setActiveClueSubType: (subType: "black" | "white" | ">" | "<" | string | null) => void;
   clueSelectionFirst: { r: number; c: number } | null;
   setClueSelectionFirst: (pos: { r: number; c: number } | null) => void;
   removeAdjacentClue: (pos1: { r: number; c: number }, pos2: { r: number; c: number }) => void;

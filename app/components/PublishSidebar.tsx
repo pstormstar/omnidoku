@@ -133,9 +133,9 @@ export default function PublishSidebar() {
             body: JSON.stringify({ 
               image: currentPNG, 
               prompt,
-              title: puzzle.aiIncludeTitle ? puzzle.title : undefined,
-              author: puzzle.aiIncludeTitle ? puzzle.author : undefined,
-              rules: puzzle.aiIncludeRules ? (puzzle.customRules || generateAutoRules(puzzle)) : undefined
+              title: (puzzle.aiIncludeTitle ?? true) ? puzzle.title : undefined,
+              author: (puzzle.aiIncludeTitle ?? true) ? puzzle.author : undefined,
+              rules: (puzzle.aiIncludeRules ?? true) ? (puzzle.customRules || generateAutoRules(puzzle)) : undefined
             })
           });
           const data = await res.json();
@@ -284,7 +284,7 @@ export default function PublishSidebar() {
                         onChange={(e) => setPuzzle(p => ({ ...p, aiIncludeTitle: e.target.checked }))}
                         className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 accent-indigo-500 cursor-pointer"
                       />
-                      <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">Include Title/Author</span>
+                      <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">Embed Title & Author</span>
                    </label>
                    <label className="flex items-center gap-3 cursor-pointer group">
                       <input 
@@ -293,7 +293,7 @@ export default function PublishSidebar() {
                         onChange={(e) => setPuzzle(p => ({ ...p, aiIncludeRules: e.target.checked }))}
                         className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 accent-indigo-500 cursor-pointer"
                       />
-                      <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">Integrate Rule-set</span>
+                      <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">Embed Rules</span>
                    </label>
                 </div>
 
@@ -313,6 +313,30 @@ export default function PublishSidebar() {
                     </>
                   ) : "Generate AI Art"}
                 </button>
+
+                <div className="p-4 rounded-2xl bg-zinc-100/50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 font-mono text-[9px] text-zinc-400/80 overflow-hidden leading-relaxed">
+                    <div className="flex items-center gap-2 mb-3 opacity-60">
+                       <div className="w-1 h-1 rounded-full bg-zinc-400" />
+                       <span className="uppercase tracking-[0.2em] font-black">Synthesis Blueprint</span>
+                    </div>
+                    <div className="space-y-3 max-h-[140px] overflow-y-auto custom-scrollbar-mini pr-2 whitespace-pre-wrap leading-relaxed opacity-80 text-[7px]">
+                       {(() => {
+                         const rulesText = (puzzle.aiIncludeRules ?? true) ? (puzzle.customRules || generateAutoRules(puzzle)) : "";
+                         const titleText = (puzzle.aiIncludeTitle ?? true) ? puzzle.title : "";
+                         const authorText = (puzzle.aiIncludeTitle ?? true) ? puzzle.author : "";
+
+                         let meta = "";
+                         if (titleText) meta += `\n- Clearly render the puzzle title '${titleText}' at the top of the piece.`;
+                         if (authorText) meta += `\n- Display the author attribution 'By ${authorText}' near the title.`;
+                         if (rulesText) meta += `\n- Legibly integrate the following rules into a dedicated sidebar or bottom panel: ${rulesText}`;
+
+                         let finalMeta = meta.trim();
+                         if (!finalMeta) finalMeta = "Pure Artboard: Do not add any additional text, labels, titles, or rules to the image. Focus purely on the thematic background art.";
+
+                         return `Transform this Sudoku puzzle into a professional, thematic layout.\nThematic Prompt: ${prompt || "..."}\n\nRequirements:\n1. Maintain the 9x9 grid structure and all pre-filled numbers with 100% accuracy.\n2. Layout Integration: ${finalMeta}\n3. Style: High-fidelity digital art, cinematic lighting, legible typography for rules and title.`;
+                       })()}
+                    </div>
+                </div>
              </div>
            ) : (
              <div className="space-y-6 animate-in fade-in duration-500">

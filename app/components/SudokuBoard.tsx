@@ -27,7 +27,9 @@ export default function SudokuBoard() {
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const [selectedCell, setSelectedCell] = useState<{ r: number; c: number } | null>(null);
   const [ghostPos, setGhostPos] = useState<{ r: number; c: number } | null>(null);
+  const [hoveredCell, setHoveredCell] = useState<{ r: number; c: number } | null>(null);
   const [hoveredSandwichIdx, setHoveredSandwichIdx] = useState<number | null>(null);
+  const [hoveredAdjacentIdx, setHoveredAdjacentIdx] = useState<number | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -128,28 +130,44 @@ export default function SudokuBoard() {
       if (!clueSelectionFirst) {
         setClueSelectionFirst({ r, c });
       } else {
-        const isAdjacent = (Math.abs(r - clueSelectionFirst.r) === 1 && c === clueSelectionFirst.c) ||
-                           (Math.abs(c - clueSelectionFirst.c) === 1 && r === clueSelectionFirst.r);
-        if (isAdjacent) {
+        const dr = Math.abs(r - clueSelectionFirst.r);
+        const dc = Math.abs(c - clueSelectionFirst.c);
+        const isOrthogonal = (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
+        const isDiagonal = dr === 1 && dc === 1;
+
+        if (activeClueType === "Quadruple" ? isDiagonal : isOrthogonal) {
+          let qDigits: string | undefined = undefined;
+          if (activeClueType === "Quadruple") {
+            const input = prompt("Enter Quadruple digits (up to 4):", "");
+            if (input === null) {
+              setClueSelectionFirst(null);
+              return;
+            }
+            qDigits = input.replace(/[^1-9]/g, "").slice(0, 4);
+            if (!qDigits) {
+              setClueSelectionFirst(null);
+              return;
+            }
+          }
+
           setPuzzle(prev => {
             const nextClues = [...(prev.adjacentClues || [])];
-            // Prevent duplicates
             const exists = nextClues.some(clue => 
               (clue.pos1.r === clueSelectionFirst.r && clue.pos1.c === clueSelectionFirst.c && clue.pos2.r === r && clue.pos2.c === c) ||
               (clue.pos1.r === r && clue.pos1.c === c && clue.pos2.r === clueSelectionFirst.r && clue.pos2.c === clueSelectionFirst.c)
             );
-            if (!exists && activeClueType !== "Sandwich") {
+            if (!exists) {
               nextClues.push({ 
                 type: activeClueType as any, 
                 pos1: clueSelectionFirst, 
                 pos2: { r, c },
-                subType: activeClueType === "Kropki" ? activeClueSubType || "white" : 
+                subType: activeClueType === "Quadruple" ? qDigits :
+                         activeClueType === "Kropki" ? activeClueSubType || "white" : 
                          activeClueType === "Inequality" ? activeClueSubType || ">" : undefined
               });
             }
             return { ...prev, adjacentClues: nextClues };
           });
-          // Keep activeClueType for multi-placement, but reset first cell
           setClueSelectionFirst(null);
         } else {
           setClueSelectionFirst({ r, c });
@@ -260,6 +278,7 @@ export default function SudokuBoard() {
                   className={`transition-colors ${selectionMode === "cell" ? "cursor-pointer hover:fill-zinc-400/10" : ""}`}
                   onClick={(e) => handleCellClick(r, c, e)}
                   onMouseEnter={() => {
+                    setHoveredCell({ r, c });
                     if (isAddingGrid && placementPivot) {
                       const dr = r - placementPivot.r, dc = c - placementPivot.c;
                       if (Math.abs(dr) === 1 && Math.abs(dc) === 1) {
@@ -269,7 +288,10 @@ export default function SudokuBoard() {
                       } else setGhostPos(null);
                     }
                   }}
-                  onMouseLeave={() => setGhostPos(null)}
+                  onMouseLeave={() => {
+                    setHoveredCell(null);
+                    setGhostPos(null);
+                  }}
                 />
               );
             })}
@@ -277,9 +299,38 @@ export default function SudokuBoard() {
                <rect 
                   x={clueSelectionFirst.c * cellSize} y={clueSelectionFirst.r * cellSize} 
                   width={cellSize} height={cellSize} 
-                  fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" strokeWidth={3} 
-                  className="pointer-events-none stroke-dasharray-[4,4]"
+                  fill="rgba(59, 130, 246, 0.1)" stroke="#3b82f6" strokeWidth={2} 
+                  className="pointer-events-none"
                />
+            )}
+            {activeClueType === "Quadruple" && clueSelectionFirst && hoveredCell && (
+              (() => {
+                const dr = hoveredCell.r - clueSelectionFirst.r;
+                const dc = hoveredCell.c - clueSelectionFirst.c;
+                if (Math.abs(dr) === 1 && Math.abs(dc) === 1) {
+                  const gx = (clueSelectionFirst.c + (dc === 1 ? 1 : 0)) * cellSize;
+                  const gy = (clueSelectionFirst.r + (dr === 1 ? 1 : 0)) * cellSize;
+                  return (
+                    <g className="pointer-events-none">
+                       {/* Overlay on the hovered cell */}
+                       <rect 
+                         x={hoveredCell.c * cellSize} y={hoveredCell.r * cellSize} 
+                         width={cellSize} height={cellSize}
+                         fill="rgba(59, 130, 246, 0.15)"
+                         className="animate-in fade-in duration-200"
+                       />
+                       {/* The ghost circle at the intersection */}
+                       <circle 
+                         cx={gx} cy={gy} r={18} 
+                         fill="rgba(255, 255, 255, 0.95)" stroke="#3b82f6" strokeWidth={2}
+                         className="shadow-lg blur-[0.5px]"
+                       />
+                       <text x={gx} y={gy} dominantBaseline="central" textAnchor="middle" className="fill-blue-500 font-black text-[10px]">?</text>
+                    </g>
+                  );
+                }
+                return null;
+              })()
             )}
             {isAddingGrid && ghostPos && (
               <rect x={ghostPos.c * cellSize} y={ghostPos.r * cellSize} width={GRID_SIZE * cellSize} height={GRID_SIZE * cellSize} fill="rgba(20, 184, 166, 0.1)" stroke="#14b8a6" strokeWidth={2} strokeDasharray="5 5" className="pointer-events-none animate-pulse" />
@@ -534,13 +585,19 @@ export default function SudokuBoard() {
               const isBlack = clue.subType === "black";
               const isInequality = clue.type === "Inequality";
               
+              const isHovered = hoveredAdjacentIdx === idx && gameMode === "design";
+              const isQuadruple = clue.type === "Quadruple";
+              
               const clickProps = {
                 onClick: (e: any) => {
                   if (gameMode === "design") {
                     e.stopPropagation();
                     removeAdjacentClue(clue.pos1, clue.pos2);
+                    setHoveredAdjacentIdx(null);
                   }
                 },
+                onMouseEnter: () => setHoveredAdjacentIdx(idx),
+                onMouseLeave: () => setHoveredAdjacentIdx(null),
                 className: `select-none ${gameMode === "design" ? "cursor-pointer" : "pointer-events-none"}`
               };
 
@@ -552,16 +609,61 @@ export default function SudokuBoard() {
                 if (!isGreater) angle += 180;
 
                 return (
-                  <g key={`adj-clue-${idx}`} transform={`translate(${midX}, ${midY}) rotate(${angle})`} {...clickProps}>
-                    <path 
-                      d="M -5 -7 L 4 0 L -5 7" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth={2.5} 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      className="text-zinc-900 dark:text-zinc-100"
+                  <g key={`adj-clue-${idx}`} {...clickProps}>
+                    {/* Invisible larger hit area */}
+                    <rect x={midX - 15} y={midY - 15} width={30} height={30} fill="transparent" />
+                    
+                    <g transform={`translate(${midX}, ${midY}) rotate(${angle})`}>
+                      <path 
+                        d="M -5 -7 L 4 0 L -5 7" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth={2.5} 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="text-zinc-900 dark:text-zinc-100"
+                      />
+                    </g>
+
+                    {isHovered && (
+                      <g transform={`translate(${midX}, ${midY})`}>
+                         <circle 
+                           cx={12} cy={-12} r={8} 
+                           className="fill-rose-500 hover:fill-rose-600 transition-colors" 
+                         />
+                         <text 
+                           x={12} y={-12} dominantBaseline="central" textAnchor="middle" 
+                           className="fill-white font-black text-[10px]"
+                         >
+                            ×
+                         </text>
+                      </g>
+                    )}
+                  </g>
+                );
+              }
+
+              if (isQuadruple) {
+                const digits = clue.subType || "";
+                return (
+                  <g key={`adj-clue-${idx}`} {...clickProps}>
+                    <circle 
+                      cx={midX} cy={midY} r={18} 
+                      className="fill-white dark:fill-zinc-800 stroke-zinc-400 dark:stroke-zinc-600 shadow-sm"
+                      strokeWidth={1.5}
                     />
+                    <text 
+                      x={midX} y={midY} dominantBaseline="central" textAnchor="middle" 
+                      className="fill-zinc-900 dark:fill-zinc-100 font-bold text-[12px] tracking-tight"
+                    >
+                      {digits}
+                    </text>
+                    {isHovered && (
+                       <g transform={`translate(${midX}, ${midY})`}>
+                           <circle cx={14} cy={-14} r={8} className="fill-rose-500 hover:fill-rose-600 transition-colors" />
+                           <text x={14} y={-14} dominantBaseline="central" textAnchor="middle" className="fill-white font-black text-[10px]">×</text>
+                       </g>
+                    )}
                   </g>
                 );
               }
@@ -580,7 +682,7 @@ export default function SudokuBoard() {
                       x={midX} y={midY} dominantBaseline="central" textAnchor="middle" 
                       className="fill-zinc-900 dark:fill-zinc-100 font-black text-[14px]"
                     >
-                      {clue.type}
+                      {clue.type[0]}
                     </text>
                   )}
                 </g>

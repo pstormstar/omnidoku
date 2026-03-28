@@ -1,0 +1,733 @@
+{
+  "grids": [
+    {
+      "id": "g1",
+      "r": 0,
+      "c": 0,
+      "size": 9,
+      "boxW": 3,
+      "boxH": 3,
+      "pivotR": 0,
+      "pivotC": 0,
+      "dr": 1,
+      "dc": 1
+    }
+  ],
+  "cells": {
+    "0,0": {
+      "val": 5,
+      "isGiven": true
+    },
+    "0,1": {
+      "val": 3,
+      "isGiven": true
+    },
+    "0,2": {
+      "val": null,
+      "isGiven": false
+    },
+    "0,3": {
+      "val": null,
+      "isGiven": false
+    },
+    "0,4": {
+      "val": 7,
+      "isGiven": true
+    },
+    "0,5": {
+      "val": null,
+      "isGiven": false
+    },
+    "0,6": {
+      "val": null,
+      "isGiven": false
+    },
+    "0,7": {
+      "val": null,
+      "isGiven": false
+    },
+    "0,8": {
+      "val": null,
+      "isGiven": false
+    },
+    "1,0": {
+      "val": 6,
+      "isGiven": true
+    },
+    "1,1": {
+      "val": null,
+      "isGiven": false
+    },
+    "1,2": {
+      "val": null,
+      "isGiven": false
+    },
+    "1,3": {
+      "val": 1,
+      "isGiven": true
+    },
+    "1,4": {
+      "val": 9,
+      "isGiven": true
+    },
+    "1,5": {
+      "val": 5,
+      "isGiven": true
+    },
+    "1,6": {
+      "val": null,
+      "isGiven": false
+    },
+    "1,7": {
+      "val": null,
+      "isGiven": false
+    },
+    "1,8": {
+      "val": null,
+      "isGiven": false
+    },
+    "2,0": {
+      "val": null,
+      "isGiven": false
+    },
+    "2,1": {
+      "val": 9,
+      "isGiven": true
+    },
+    "2,2": {
+      "val": 8,
+      "isGiven": true
+    },
+    "2,3": {
+      "val": null,
+      "isGiven": false
+    },
+    "2,4": {
+      "val": null,
+      "isGiven": false
+    },
+    "2,5": {
+      "val": null,
+      "isGiven": false
+    },
+    "2,6": {
+      "val": null,
+      "isGiven": false
+    },
+    "2,7": {
+      "val": 6,
+      "isGiven": true
+    },
+    "2,8": {
+      "val": null,
+      "isGiven": false
+    },
+    "3,0": {
+      "val": 8,
+      "isGiven": true
+    },
+    "3,1": {
+      "val": null,
+      "isGiven": false
+    },
+    "3,2": {
+      "val": null,
+      "isGiven": false
+    },
+    "3,3": {
+      "val": null,
+      "isGiven": false
+    },
+    "3,4": {
+      "val": 6,
+      "isGiven": true
+    },
+    "3,5": {
+      "val": null,
+      "isGiven": false
+    },
+    "3,6": {
+      "val": null,
+      "isGiven": false
+    },
+    "3,7": {
+      "val": null,
+      "isGiven": false
+    },
+    "3,8": {
+      "val": 3,
+      "isGiven": true
+    },
+    "4,0": {
+      "val": 4,
+      "isGiven": true
+    },
+    "4,1": {
+      "val": null,
+      "isGiven": false
+    },
+    "4,2": {
+      "val": null,
+      "isGiven": false
+    },
+    "4,3": {
+      "val": 8,
+      "isGiven": true
+    },
+    "4,4": {
+      "val": null,
+      "isGiven": false
+    },
+    "4,5": {
+      "val": 3,
+      "isGiven": true
+    },
+    "4,6": {
+      "val": null,
+      "isGiven": false
+    },
+    "4,7": {
+      "val": null,
+      "isGiven": false
+    },
+    "4,8": {
+      "val": 1,
+      "isGiven": true
+    },
+    "5,0": {
+      "val": 7,
+      "isGiven": true
+    },
+    "5,1": {
+      "val": null,
+      "isGiven": false
+    },
+    "5,2": {
+      "val": null,
+      "isGiven": false
+    },
+    "5,3": {
+      "val": null,
+      "isGiven": false
+    },
+    "5,4": {
+      "val": 2,
+      "isGiven": true
+    },
+    "5,5": {
+      "val": null,
+      "isGiven": false
+    },
+    "5,6": {
+      "val": null,
+      "isGiven": false
+    },
+    "5,7": {
+      "val": null,
+      "isGiven": false
+    },
+    "5,8": {
+      "val": 6,
+      "isGiven": true
+    },
+    "6,0": {
+      "val": null,
+      "isGiven": false
+    },
+    "6,1": {
+      "val": 6,
+      "isGiven": true
+    },
+    "6,2": {
+      "val": null,
+      "isGiven": false
+    },
+    "6,3": {
+      "val": null,
+      "isGiven": false
+    },
+    "6,4": {
+      "val": null,
+      "isGiven": false
+    },
+    "6,5": {
+      "val": null,
+      "isGiven": false
+    },
+    "6,6": {
+      "val": 2,
+      "isGiven": true
+    },
+    "6,7": {
+      "val": 8,
+      "isGiven": true
+    },
+    "6,8": {
+      "val": null,
+      "isGiven": false
+    },
+    "7,0": {
+      "val": null,
+      "isGiven": false
+    },
+    "7,1": {
+      "val": null,
+      "isGiven": false
+    },
+    "7,2": {
+      "val": null,
+      "isGiven": false
+    },
+    "7,3": {
+      "val": 4,
+      "isGiven": true
+    },
+    "7,4": {
+      "val": 1,
+      "isGiven": true
+    },
+    "7,5": {
+      "val": 9,
+      "isGiven": true
+    },
+    "7,6": {
+      "val": null,
+      "isGiven": false
+    },
+    "7,7": {
+      "val": null,
+      "isGiven": false
+    },
+    "7,8": {
+      "val": 5,
+      "isGiven": true
+    },
+    "8,0": {
+      "val": null,
+      "isGiven": false
+    },
+    "8,1": {
+      "val": null,
+      "isGiven": false
+    },
+    "8,2": {
+      "val": null,
+      "isGiven": false
+    },
+    "8,3": {
+      "val": null,
+      "isGiven": false
+    },
+    "8,4": {
+      "val": 8,
+      "isGiven": true
+    },
+    "8,5": {
+      "val": null,
+      "isGiven": false
+    },
+    "8,6": {
+      "val": null,
+      "isGiven": false
+    },
+    "8,7": {
+      "val": 7,
+      "isGiven": true
+    },
+    "8,8": {
+      "val": 9,
+      "isGiven": true
+    }
+  },
+  "regions": [
+    {
+      "id": "box-g1-0_0",
+      "type": "box",
+      "cells": [
+        {
+          "r": 0,
+          "c": 0
+        },
+        {
+          "r": 0,
+          "c": 1
+        },
+        {
+          "r": 0,
+          "c": 2
+        },
+        {
+          "r": 1,
+          "c": 0
+        },
+        {
+          "r": 1,
+          "c": 1
+        },
+        {
+          "r": 1,
+          "c": 2
+        },
+        {
+          "r": 2,
+          "c": 0
+        },
+        {
+          "r": 2,
+          "c": 1
+        },
+        {
+          "r": 2,
+          "c": 2
+        }
+      ],
+      "gridId": "g1"
+    },
+    {
+      "id": "box-g1-0_1",
+      "type": "box",
+      "cells": [
+        {
+          "r": 0,
+          "c": 3
+        },
+        {
+          "r": 0,
+          "c": 4
+        },
+        {
+          "r": 0,
+          "c": 5
+        },
+        {
+          "r": 1,
+          "c": 3
+        },
+        {
+          "r": 1,
+          "c": 4
+        },
+        {
+          "r": 1,
+          "c": 5
+        },
+        {
+          "r": 2,
+          "c": 3
+        },
+        {
+          "r": 2,
+          "c": 4
+        },
+        {
+          "r": 2,
+          "c": 5
+        }
+      ],
+      "gridId": "g1"
+    },
+    {
+      "id": "box-g1-0_2",
+      "type": "box",
+      "cells": [
+        {
+          "r": 0,
+          "c": 6
+        },
+        {
+          "r": 0,
+          "c": 7
+        },
+        {
+          "r": 0,
+          "c": 8
+        },
+        {
+          "r": 1,
+          "c": 6
+        },
+        {
+          "r": 1,
+          "c": 7
+        },
+        {
+          "r": 1,
+          "c": 8
+        },
+        {
+          "r": 2,
+          "c": 6
+        },
+        {
+          "r": 2,
+          "c": 7
+        },
+        {
+          "r": 2,
+          "c": 8
+        }
+      ],
+      "gridId": "g1"
+    },
+    {
+      "id": "box-g1-1_0",
+      "type": "box",
+      "cells": [
+        {
+          "r": 3,
+          "c": 0
+        },
+        {
+          "r": 3,
+          "c": 1
+        },
+        {
+          "r": 3,
+          "c": 2
+        },
+        {
+          "r": 4,
+          "c": 0
+        },
+        {
+          "r": 4,
+          "c": 1
+        },
+        {
+          "r": 4,
+          "c": 2
+        },
+        {
+          "r": 5,
+          "c": 0
+        },
+        {
+          "r": 5,
+          "c": 1
+        },
+        {
+          "r": 5,
+          "c": 2
+        }
+      ],
+      "gridId": "g1"
+    },
+    {
+      "id": "box-g1-1_1",
+      "type": "box",
+      "cells": [
+        {
+          "r": 3,
+          "c": 3
+        },
+        {
+          "r": 3,
+          "c": 4
+        },
+        {
+          "r": 3,
+          "c": 5
+        },
+        {
+          "r": 4,
+          "c": 3
+        },
+        {
+          "r": 4,
+          "c": 4
+        },
+        {
+          "r": 4,
+          "c": 5
+        },
+        {
+          "r": 5,
+          "c": 3
+        },
+        {
+          "r": 5,
+          "c": 4
+        },
+        {
+          "r": 5,
+          "c": 5
+        }
+      ],
+      "gridId": "g1"
+    },
+    {
+      "id": "box-g1-1_2",
+      "type": "box",
+      "cells": [
+        {
+          "r": 3,
+          "c": 6
+        },
+        {
+          "r": 3,
+          "c": 7
+        },
+        {
+          "r": 3,
+          "c": 8
+        },
+        {
+          "r": 4,
+          "c": 6
+        },
+        {
+          "r": 4,
+          "c": 7
+        },
+        {
+          "r": 4,
+          "c": 8
+        },
+        {
+          "r": 5,
+          "c": 6
+        },
+        {
+          "r": 5,
+          "c": 7
+        },
+        {
+          "r": 5,
+          "c": 8
+        }
+      ],
+      "gridId": "g1"
+    },
+    {
+      "id": "box-g1-2_0",
+      "type": "box",
+      "cells": [
+        {
+          "r": 6,
+          "c": 0
+        },
+        {
+          "r": 6,
+          "c": 1
+        },
+        {
+          "r": 6,
+          "c": 2
+        },
+        {
+          "r": 7,
+          "c": 0
+        },
+        {
+          "r": 7,
+          "c": 1
+        },
+        {
+          "r": 7,
+          "c": 2
+        },
+        {
+          "r": 8,
+          "c": 0
+        },
+        {
+          "r": 8,
+          "c": 1
+        },
+        {
+          "r": 8,
+          "c": 2
+        }
+      ],
+      "gridId": "g1"
+    },
+    {
+      "id": "box-g1-2_1",
+      "type": "box",
+      "cells": [
+        {
+          "r": 6,
+          "c": 3
+        },
+        {
+          "r": 6,
+          "c": 4
+        },
+        {
+          "r": 6,
+          "c": 5
+        },
+        {
+          "r": 7,
+          "c": 3
+        },
+        {
+          "r": 7,
+          "c": 4
+        },
+        {
+          "r": 7,
+          "c": 5
+        },
+        {
+          "r": 8,
+          "c": 3
+        },
+        {
+          "r": 8,
+          "c": 4
+        },
+        {
+          "r": 8,
+          "c": 5
+        }
+      ],
+      "gridId": "g1"
+    },
+    {
+      "id": "box-g1-2_2",
+      "type": "box",
+      "cells": [
+        {
+          "r": 6,
+          "c": 6
+        },
+        {
+          "r": 6,
+          "c": 7
+        },
+        {
+          "r": 6,
+          "c": 8
+        },
+        {
+          "r": 7,
+          "c": 6
+        },
+        {
+          "r": 7,
+          "c": 7
+        },
+        {
+          "r": 7,
+          "c": 8
+        },
+        {
+          "r": 8,
+          "c": 6
+        },
+        {
+          "r": 8,
+          "c": 7
+        },
+        {
+          "r": 8,
+          "c": 8
+        }
+      ],
+      "gridId": "g1"
+    }
+  ],
+  "title": "Standard Puzzle",
+  "description": "From Wikipedia"
+}

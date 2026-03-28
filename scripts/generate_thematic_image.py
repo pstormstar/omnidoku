@@ -39,23 +39,26 @@ def generate_thematic_image(image_path, prompt, api_key=None, model_id="gemini-3
     # Construct metadata block for the prompt
     metadata_instructions = ""
     if title:
-        metadata_instructions += f"\n- Title the artwork as '{title}'."
+        metadata_instructions += f"\n- Clearly render the puzzle title '{title}' at the top of the piece."
     if author:
-        metadata_instructions += f"\n- Credite the puzzle to author '{author}'."
+        metadata_instructions += f"\n- Display the author attribution 'By {author}' near the title."
     if rules:
-        metadata_instructions += f"\n- Integrate these rules beneatht the composition: {rules}"
+        metadata_instructions += f"\n- Legibly integrate the following rules into a dedicated sidebar or bottom panel: {rules}"
+
+    if not metadata_instructions:
+        metadata_instructions = "\n- Pure Artboard: Do not add any additional text, labels, titles, or rules to the image. Focus purely on the thematic background art."
 
     try:
         img = Image.open(image_path)
         model = genai.GenerativeModel(model_id)
         
         full_prompt = (
-            f"Transform this Sudoku puzzle into a high-fidelity thematic background. "
-            f"Theme: {prompt}. "
+            f"Transform this Sudoku puzzle into a professional, thematic layout. "
+            f"Thematic Prompt: {prompt}. "
             f"Requirements: "
-            f"1. Preserve the 9x9 grid structure and all numbers perfectly while stylizing them to match. "
-            f"2. {metadata_instructions if metadata_instructions else 'Create a cinematic artistic environment.'} "
-            f"3. Style: Photorealistic, cinematic, professional layout."
+            f"1. Maintain the 9x9 grid structure and all pre-filled numbers with 100% accuracy. "
+            f"2. Layout Integration: {metadata_instructions if metadata_instructions else 'Create a cinematic background atmosphere.'} "
+            f"3. Style: High-fidelity digital art, cinematic lighting, legible typography for rules and title."
         )
 
         response = model.generate_content([full_prompt, img])

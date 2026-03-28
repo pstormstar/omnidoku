@@ -29,10 +29,10 @@ export interface Cage {
 }
 
 export interface AdjacentClue {
-  type: "X" | "V" | "Kropki" | "Inequality";
+  type: "X" | "V" | "Kropki" | "Inequality" | "Quadruple";
   pos1: Position;
   pos2: Position;
-  subType?: "black" | "white" | ">" | "<";
+  subType?: "black" | "white" | ">" | "<" | string;
 }
 
 export interface LittleKiller {

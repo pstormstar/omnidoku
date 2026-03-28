@@ -4,9 +4,6 @@
       "id": "g1",
       "r": 0,
       "c": 0,
-      "size": 9,
-      "boxW": 3,
-      "boxH": 3,
       "pivotR": 0,
       "pivotC": 0,
       "dr": 1,
@@ -15,12 +12,12 @@
   ],
   "cells": {
     "0,0": {
-      "val": 5,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "0,1": {
-      "val": 3,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "0,2": {
       "val": null,
@@ -31,8 +28,8 @@
       "isGiven": false
     },
     "0,4": {
-      "val": 7,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "0,5": {
       "val": null,
@@ -51,8 +48,8 @@
       "isGiven": false
     },
     "1,0": {
-      "val": 6,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "1,1": {
       "val": null,
@@ -63,16 +60,16 @@
       "isGiven": false
     },
     "1,3": {
-      "val": 1,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "1,4": {
-      "val": 9,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "1,5": {
-      "val": 5,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "1,6": {
       "val": null,
@@ -91,12 +88,12 @@
       "isGiven": false
     },
     "2,1": {
-      "val": 9,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "2,2": {
-      "val": 8,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "2,3": {
       "val": null,
@@ -115,16 +112,16 @@
       "isGiven": false
     },
     "2,7": {
-      "val": 6,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "2,8": {
       "val": null,
       "isGiven": false
     },
     "3,0": {
-      "val": 8,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "3,1": {
       "val": null,
@@ -139,8 +136,8 @@
       "isGiven": false
     },
     "3,4": {
-      "val": 6,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "3,5": {
       "val": null,
@@ -155,32 +152,32 @@
       "isGiven": false
     },
     "3,8": {
-      "val": 3,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "4,0": {
-      "val": 4,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "4,1": {
       "val": null,
       "isGiven": false
     },
     "4,2": {
-      "val": null,
-      "isGiven": false
+      "val": 1,
+      "isGiven": true
     },
     "4,3": {
-      "val": 8,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "4,4": {
       "val": null,
       "isGiven": false
     },
     "4,5": {
-      "val": 3,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "4,6": {
       "val": null,
@@ -191,12 +188,12 @@
       "isGiven": false
     },
     "4,8": {
-      "val": 1,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "5,0": {
-      "val": 7,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "5,1": {
       "val": null,
@@ -211,32 +208,32 @@
       "isGiven": false
     },
     "5,4": {
-      "val": 2,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "5,5": {
       "val": null,
       "isGiven": false
     },
     "5,6": {
-      "val": null,
-      "isGiven": false
+      "val": 2,
+      "isGiven": true
     },
     "5,7": {
       "val": null,
       "isGiven": false
     },
     "5,8": {
-      "val": 6,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "6,0": {
       "val": null,
       "isGiven": false
     },
     "6,1": {
-      "val": 6,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "6,2": {
       "val": null,
@@ -255,12 +252,12 @@
       "isGiven": false
     },
     "6,6": {
-      "val": 2,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "6,7": {
-      "val": 8,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "6,8": {
       "val": null,
@@ -279,16 +276,16 @@
       "isGiven": false
     },
     "7,3": {
-      "val": 4,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "7,4": {
-      "val": 1,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "7,5": {
-      "val": 9,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "7,6": {
       "val": null,
@@ -299,8 +296,8 @@
       "isGiven": false
     },
     "7,8": {
-      "val": 5,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "8,0": {
       "val": null,
@@ -319,8 +316,8 @@
       "isGiven": false
     },
     "8,4": {
-      "val": 8,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "8,5": {
       "val": null,
@@ -331,12 +328,12 @@
       "isGiven": false
     },
     "8,7": {
-      "val": 7,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "8,8": {
-      "val": 9,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     }
   },
   "regions": [
@@ -727,5 +724,11 @@
       ],
       "gridId": "g1"
     }
-  ]
+  ],
+  "antiknight": true,
+  "antiking": true,
+  "nonConsecutive": true,
+  "title": "The Miracle Sudoku",
+  "author": "Phistomefel",
+  "description": "Popularized by Cracking the Cryptic"
 }

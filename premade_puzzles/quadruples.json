@@ -104,8 +104,8 @@
       "isGiven": false
     },
     "2,5": {
-      "val": null,
-      "isGiven": false
+      "val": 4,
+      "isGiven": true
     },
     "2,6": {
       "val": null,
@@ -128,8 +128,8 @@
       "isGiven": false
     },
     "3,2": {
-      "val": null,
-      "isGiven": false
+      "val": 3,
+      "isGiven": true
     },
     "3,3": {
       "val": null,
@@ -164,8 +164,8 @@
       "isGiven": false
     },
     "4,2": {
-      "val": 1,
-      "isGiven": true
+      "val": null,
+      "isGiven": false
     },
     "4,3": {
       "val": null,
@@ -216,7 +216,7 @@
       "isGiven": false
     },
     "5,6": {
-      "val": 2,
+      "val": 1,
       "isGiven": true
     },
     "5,7": {
@@ -240,8 +240,8 @@
       "isGiven": false
     },
     "6,3": {
-      "val": null,
-      "isGiven": false
+      "val": 2,
+      "isGiven": true
     },
     "6,4": {
       "val": null,
@@ -725,7 +725,153 @@
       "gridId": "g1"
     }
   ],
-  "antiknight": true,
-  "antiking": true,
-  "nonConsecutive": true
+  "adjacentClues": [
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 2,
+        "c": 2
+      },
+      "pos2": {
+        "r": 1,
+        "c": 3
+      },
+      "subType": "4578"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 3,
+        "c": 1
+      },
+      "pos2": {
+        "r": 2,
+        "c": 2
+      },
+      "subType": "29"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 6,
+        "c": 1
+      },
+      "pos2": {
+        "r": 5,
+        "c": 2
+      },
+      "subType": "3678"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 7,
+        "c": 2
+      },
+      "pos2": {
+        "r": 6,
+        "c": 3
+      },
+      "subType": "19"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 6,
+        "c": 3
+      },
+      "pos2": {
+        "r": 5,
+        "c": 4
+      },
+      "subType": "137"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 7,
+        "c": 5
+      },
+      "pos2": {
+        "r": 6,
+        "c": 6
+      },
+      "subType": "2567"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 6,
+        "c": 6
+      },
+      "pos2": {
+        "r": 5,
+        "c": 7
+      },
+      "subType": "89"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 5,
+        "c": 5
+      },
+      "pos2": {
+        "r": 4,
+        "c": 6
+      },
+      "subType": "246"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 3,
+        "c": 6
+      },
+      "pos2": {
+        "r": 2,
+        "c": 7
+      },
+      "subType": "1568"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 3,
+        "c": 4
+      },
+      "pos2": {
+        "r": 2,
+        "c": 5
+      },
+      "subType": "135"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 2,
+        "c": 5
+      },
+      "pos2": {
+        "r": 1,
+        "c": 6
+      },
+      "subType": "79"
+    },
+    {
+      "type": "Quadruple",
+      "pos1": {
+        "r": 4,
+        "c": 2
+      },
+      "pos2": {
+        "r": 3,
+        "c": 3
+      },
+      "subType": "248"
+    }
+  ],
+  "title": "Quadruples Sudoku",
+  "author": "Bill Murphy",
+  "description": "Source: https://www.gmpuzzles.com/blog/2025/06/quadruples-sudoku-by-bill-murphy/"
 }
