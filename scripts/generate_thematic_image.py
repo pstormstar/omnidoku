@@ -7,7 +7,13 @@ from PIL import Image
 import io
 
 def load_api_key():
-    """Attempts to load the API key from a .gemini_api_key file in the root."""
+    """Attempts to load the API key from the environment, then a local file."""
+    # 1. First, check the Vercel environment variables
+    env_key = os.getenv("GEMINI_API_KEY")
+    if env_key:
+        return env_key
+
+    # 2. Fallback to local files (for local testing)
     try:
         paths = [".gemini_api_key", "../.gemini_api_key", "omnidoku/.gemini_api_key"]
         for path in paths:
@@ -18,8 +24,10 @@ def load_api_key():
                         if not line or line.startswith("#"):
                             continue
                         return line
-    except:
+    except Exception as e:
+        print(f"Warning: Could not read local key file: {e}")
         pass
+    
     return None
 
 def generate_thematic_image(image_path, prompt, api_key=None, model_id="gemini-3.1-flash-image-preview", title=None, author=None, rules=None, structure=None):
