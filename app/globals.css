@@ -18,3 +18,13 @@
     --foreground: #ededed;
   }
 }
+
+@keyframes arrow-pivot-pulse {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(calc(var(--move-dx, 0) * 8px), calc(var(--move-dy, 0) * 8px)); }
+  100% { transform: translate(0, 0); }
+}
+
+.animate-arrow-pivot {
+  animation: arrow-pivot-pulse 1s ease-in-out infinite;
+}

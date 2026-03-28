@@ -12,6 +12,7 @@ export interface CellData {
 
 export interface Region {
   cells: Position[];
+  gridId?: string; // Opt-in parent board association
 }
 
 export interface Thermometer {
@@ -52,10 +53,32 @@ export interface Arrow {
   path: Position[];
 }
 
+export interface GridDef {
+  id: string;
+  r: number; // Calculated top-left row
+  c: number; // Calculated top-left column
+  size: number;
+  boxW: number;
+  boxH: number;
+  // Pivot point where the grid was anchored
+  pivotR: number;
+  pivotC: number;
+  // Alignment: which corner of the grid is the pivot?
+  // 1,1 = Pivot is Top-Left; -1,1 = Pivot is Bottom-Left; 1,-1 = Pivot is Top-Right; -1,-1 = Pivot is Bottom-Right
+  dr: number;
+  dc: number;
+  isJigsaw?: boolean;
+}
+
 export interface PuzzleDef {
   title?: string;
   author?: string;
   rules?: string;
+
+  /**
+   * Defined grids in this multisudoku
+   */
+  grids: GridDef[];
 
   /**
    * Defines active cells in the grid.
