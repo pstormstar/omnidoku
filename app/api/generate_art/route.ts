@@ -6,7 +6,7 @@ import { existsSync } from "fs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { image, prompt, apiKey, title, author, rules } = await req.json();
+    const { image, prompt, apiKey, title, author, rules, structure } = await req.json();
     
     if (!image || !prompt) {
       return NextResponse.json({ error: "Missing required fields (image or prompt)" }, { status: 400 });
@@ -38,6 +38,11 @@ export async function POST(req: NextRequest) {
       await writeFile(rulesPath, rules);
       cmd += ` --rules_file "${rulesPath}"`;
     }
+    if (structure) {
+      const structurePath = join(tmpDir, `structure_${Date.now()}.txt`);
+      await writeFile(structurePath, structure);
+      cmd += ` --structure_file "${structurePath}"`;
+    }
 
     return new Promise<NextResponse>((resolve) => {
       exec(cmd, async (error, stdout, stderr) => {
@@ -45,8 +50,12 @@ export async function POST(req: NextRequest) {
         try {
           await unlink(tempFilePath);
           if (cmd.includes("--rules_file")) {
-            const pathMatch = cmd.match(/--rules_file "([^"]+)"/);
-            if (pathMatch) await unlink(pathMatch[1]);
+            const rulesMatch = cmd.match(/--rules_file "([^"]+)"/);
+            if (rulesMatch) await unlink(rulesMatch[1]).catch(() => {});
+          }
+          if (cmd.includes("--structure_file")) {
+            const structureMatch = cmd.match(/--structure_file "([^"]+)"/);
+            if (structureMatch) await unlink(structureMatch[1]).catch(() => {});
           }
         } catch (err) {}
 

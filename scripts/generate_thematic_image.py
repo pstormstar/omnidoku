@@ -22,7 +22,7 @@ def load_api_key():
         pass
     return None
 
-def generate_thematic_image(image_path, prompt, api_key=None, model_id="gemini-3.1-flash-image-preview", title=None, author=None, rules=None):
+def generate_thematic_image(image_path, prompt, api_key=None, model_id="gemini-3.1-flash-image-preview", title=None, author=None, rules=None, structure=None):
     """
     Generates a thematic background/image using Gemini 3.1 Flash Image Preview (Image-to-Image).
     Integrates title, author, and rules into the final asset structure.
@@ -39,26 +39,37 @@ def generate_thematic_image(image_path, prompt, api_key=None, model_id="gemini-3
     # Construct metadata block for the prompt
     metadata_instructions = ""
     if title:
-        metadata_instructions += f"\n- Clearly render the puzzle title '{title}' at the top of the piece."
+        metadata_instructions += f"\n- Clearly render the puzzle title '{title}' at the top of the piece, well away from the grid."
     if author:
         metadata_instructions += f"\n- Display the author attribution 'By {author}' near the title."
     if rules:
         metadata_instructions += f"\n- Legibly integrate the following rules into a dedicated sidebar or bottom panel: {rules}"
 
+    has_meta = bool(metadata_instructions)
+
     if not metadata_instructions:
         metadata_instructions = "\n- Pure Artboard: Do not add any additional text, labels, titles, or rules to the image. Focus purely on the thematic background art."
+
+    critical_rule = (
+        " 4. CRITICAL: Under no condition should the puzzle title, author name, or rules text be placed inside the 9x9 Sudoku grid. All descriptive text and metadata MUST be kept on the margins, side-panels, or periphery of the image."
+        if has_meta else ""
+    )
 
     try:
         img = Image.open(image_path)
         model = genai.GenerativeModel(model_id)
+
+        structure_line = f"Puzzle Structure: {structure} " if structure else ""
         
         full_prompt = (
             f"Transform this Sudoku puzzle into a professional, thematic layout. "
+            f"{structure_line}"
             f"Thematic Prompt: {prompt}. "
             f"Requirements: "
-            f"1. Maintain the 9x9 grid structure and all pre-filled numbers with 100% accuracy. "
-            f"2. Layout Integration: {metadata_instructions if metadata_instructions else 'Create a cinematic background atmosphere.'} "
+            f"1. Maintain the 9x9 grid structure of each grid and all pre-filled numbers with 100% accuracy. "
+            f"2. Layout Integration: {metadata_instructions} "
             f"3. Style: High-fidelity digital art, cinematic lighting, legible typography for rules and title."
+            f"{critical_rule}"
         )
 
         response = model.generate_content([full_prompt, img])
@@ -97,6 +108,7 @@ if __name__ == "__main__":
     parser.add_argument("--title", default=None)
     parser.add_argument("--author", default=None)
     parser.add_argument("--rules_file", default=None)
+    parser.add_argument("--structure_file", default=None)
     
     args = parser.parse_args()
     
@@ -105,6 +117,11 @@ if __name__ == "__main__":
         with open(args.rules_file, "r") as f:
             rules_text = f.read()
 
+    structure_text = None
+    if args.structure_file and os.path.exists(args.structure_file):
+        with open(args.structure_file, "r") as f:
+            structure_text = f.read()
+
     generate_thematic_image(
         args.image, 
         args.prompt, 
@@ -112,5 +129,6 @@ if __name__ == "__main__":
         args.model, 
         title=args.title, 
         author=args.author, 
-        rules=rules_text
+        rules=rules_text,
+        structure=structure_text
     )

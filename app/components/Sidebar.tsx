@@ -237,9 +237,43 @@ export default function Sidebar() {
 
   if (isPlayMode) {
     return (
-      <aside className="w-10 border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 flex items-center justify-center relative overflow-hidden flex-shrink-0">
-        <div className="whitespace-nowrap -rotate-90 origin-center text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 select-none">
-          DESIGN MODE REQUIRED
+      <aside
+        ref={sidebarRef}
+        style={{ width: `${width}%` }}
+        className="flex-shrink-0 border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950/50 hidden md:flex flex-col relative"
+      >
+        <div
+          onMouseDown={startResizing}
+          className={`absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors z-[60] ${isDragging ? "bg-zinc-900/10 dark:bg-white/10" : ""}`}
+        />
+        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar text-zinc-800 dark:text-zinc-200">
+          {(puzzle.title || puzzle.author) && (
+            <div className="space-y-2">
+              {puzzle.title && (
+                <h1 className="text-2xl font-black tracking-tight uppercase">{puzzle.title}</h1>
+              )}
+              {puzzle.author && (
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                  BY {puzzle.author}
+                </p>
+              )}
+            </div>
+          )}
+          
+          {puzzle.description && (
+            <div className="text-sm leading-relaxed opacity-90 italic border-l-2 border-zinc-300 dark:border-zinc-700 pl-4">
+              {puzzle.description}
+            </div>
+          )}
+
+          <div className="space-y-4 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+              Rules
+            </h3>
+            <div className="text-[13px] leading-relaxed whitespace-pre-wrap opacity-90 font-medium">
+              {puzzle.customRules || generateAutoRules(puzzle)}
+            </div>
+          </div>
         </div>
       </aside>
     );
@@ -462,17 +496,17 @@ export default function Sidebar() {
                         onClick={toggleWindoku}
                         title={!selectedGridId ? "Select a grid first." : (isWindokuActive ? "Remove Windoku constraint" : "Add Windoku constraint")}
                         className={`w-full p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all ${isWindokuActive 
-                          ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/30" 
+                          ? "bg-zinc-100 border-zinc-300 dark:bg-zinc-800 dark:border-zinc-700 shadow-inner" 
                           : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
                         } ${!selectedGridId ? "opacity-50 cursor-not-allowed" : "active:scale-[0.98]"}`}
                       >
                          <div className="flex-1 space-y-1">
-                            <span className={`text-xs font-bold uppercase tracking-widest block ${isWindokuActive ? "text-indigo-600 dark:text-indigo-400" : "text-zinc-600 dark:text-zinc-300"}`}>Windoku</span>
+                            <span className={`text-xs font-bold uppercase tracking-widest block ${isWindokuActive ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-600 dark:text-zinc-300"}`}>Windoku</span>
                             <span className="text-[10px] font-medium text-zinc-500 opacity-80 leading-snug block">
                                Adds 4 independent 3x3 regions to the selected grid that must contain 1-9 uniquely.
                             </span>
                          </div>
-                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${isWindokuActive ? "bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${isWindokuActive ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
                             {isWindokuActive ? (
                               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                             ) : (
@@ -916,26 +950,13 @@ export default function Sidebar() {
                 <h3 className="text-xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight uppercase">
                   {validationResult.valid ? "VALID PUZZLE" : validationResult.message.toUpperCase()}
                 </h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 font-medium px-4">
-                  {validationResult.valid 
-                    ? "The Python script confirms that all digits follow multisudoku rules." 
-                    : "The Python script detected one or more issues."}
-                </p>
               </div>
-
-              {validationResult.details && (
-                <div className="w-full max-h-[120px] overflow-y-auto p-3 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800 rounded-xl">
-                   <pre className="text-[10px] text-zinc-600 dark:text-zinc-400 font-mono whitespace-pre-wrap leading-tight">
-                      {validationResult.details}
-                   </pre>
-                </div>
-              )}
 
               <button 
                 onClick={() => setValidationResult(null)}
                 className="w-full py-3 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-black tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-zinc-950/10"
               >
-                GOT IT
+                OK
               </button>
             </div>
           </div>
@@ -960,26 +981,15 @@ export default function Sidebar() {
               </div>
               <div className="text-center">
                 <h3 className="text-xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight uppercase">
-                  {uniqueResult.status.replace('_', ' ').toUpperCase()} RESULT
+                  {uniqueResult.status === "unique" ? "UNIQUENESS CONFIRMED" : uniqueResult.status.replace('_', ' ').toUpperCase()}
                 </h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 font-medium px-4">
-                  {uniqueResult.message}
-                </p>
               </div>
-
-              {uniqueResult.details && (
-                <div className="w-full max-h-[120px] overflow-y-auto p-3 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800 rounded-xl">
-                   <pre className="text-[10px] text-zinc-600 dark:text-zinc-400 font-mono whitespace-pre-wrap leading-tight">
-                      {uniqueResult.details}
-                   </pre>
-                </div>
-              )}
 
               <button 
                 onClick={() => setUniqueResult(null)}
                 className="w-full py-3 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-black tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-zinc-950/10"
               >
-                GOT IT
+                OK
               </button>
             </div>
           </div>

@@ -416,10 +416,10 @@ export default function SudokuBoard() {
                 const x = p.c * cellSize, y = p.r * cellSize;
                 
                 
-                if (!cellSet.has(`${p.r - 1},${p.c}`)) lines.push(<line key={`t-${p.r}-${p.c}`} x1={x} y1={y} x2={x + cellSize} y2={y} stroke="currentColor" strokeWidth={isWindoku ? 1.5 : 2.5} className={isWindoku ? "text-indigo-500 dark:text-indigo-400" : "text-zinc-900 dark:text-zinc-100"} />);
-                if (!cellSet.has(`${p.r + 1},${p.c}`)) lines.push(<line key={`b-${p.r}-${p.c}`} x1={x} y1={y + cellSize} x2={x + cellSize} y2={y + cellSize} stroke="currentColor" strokeWidth={isWindoku ? 1.5 : 2.5} className={isWindoku ? "text-indigo-500 dark:text-indigo-400" : "text-zinc-900 dark:text-zinc-100"} />);
-                if (!cellSet.has(`${p.r},${p.c - 1}`)) lines.push(<line key={`l-${p.r}-${p.c}`} x1={x} y1={y} x2={x} y2={y + cellSize} stroke="currentColor" strokeWidth={isWindoku ? 1.5 : 2.5} className={isWindoku ? "text-indigo-500 dark:text-indigo-400" : "text-zinc-900 dark:text-zinc-100"} />);
-                if (!cellSet.has(`${p.r},${p.c + 1}`)) lines.push(<line key={`r-${p.r}-${p.c}`} x1={x + cellSize} y1={y} x2={x + cellSize} y2={y + cellSize} stroke="currentColor" strokeWidth={isWindoku ? 1.5 : 2.5} className={isWindoku ? "text-indigo-500 dark:text-indigo-400" : "text-zinc-900 dark:text-zinc-100"} />);
+                if (!cellSet.has(`${p.r - 1},${p.c}`)) lines.push(<line key={`t-${p.r}-${p.c}`} x1={x} y1={y} x2={x + cellSize} y2={y} stroke="currentColor" strokeWidth={isWindoku ? 1.5 : 2.5} className={isWindoku ? "text-zinc-400 dark:text-zinc-500" : "text-zinc-900 dark:text-zinc-100"} />);
+                if (!cellSet.has(`${p.r + 1},${p.c}`)) lines.push(<line key={`b-${p.r}-${p.c}`} x1={x} y1={y + cellSize} x2={x + cellSize} y2={y + cellSize} stroke="currentColor" strokeWidth={isWindoku ? 1.5 : 2.5} className={isWindoku ? "text-zinc-400 dark:text-zinc-500" : "text-zinc-900 dark:text-zinc-100"} />);
+                if (!cellSet.has(`${p.r},${p.c - 1}`)) lines.push(<line key={`l-${p.r}-${p.c}`} x1={x} y1={y} x2={x} y2={y + cellSize} stroke="currentColor" strokeWidth={isWindoku ? 1.5 : 2.5} className={isWindoku ? "text-zinc-400 dark:text-zinc-500" : "text-zinc-900 dark:text-zinc-100"} />);
+                if (!cellSet.has(`${p.r},${p.c + 1}`)) lines.push(<line key={`r-${p.r}-${p.c}`} x1={x + cellSize} y1={y} x2={x + cellSize} y2={y + cellSize} stroke="currentColor" strokeWidth={isWindoku ? 1.5 : 2.5} className={isWindoku ? "text-zinc-400 dark:text-zinc-500" : "text-zinc-900 dark:text-zinc-100"} />);
               });
               return <g key={`region-${idx}`} className="pointer-events-none">{lines}</g>;
             })}
