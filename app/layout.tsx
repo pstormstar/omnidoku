@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 import Sidebar from "./components/Sidebar";
+import PublishSidebar from "./components/PublishSidebar";
 import GameModeToggle from "./components/GameModeToggle";
-import PuzzleControls from "./components/PuzzleControls";
 import PublishMenu from "./components/PublishMenu";
 import { BoardProvider } from "./context/BoardContext";
 
@@ -42,7 +42,6 @@ export default function RootLayout({
               </span>
               
               <div className="flex items-center gap-4">
-                <PuzzleControls />
                 <GameModeToggle />
                 <PublishMenu />
               </div>
@@ -54,6 +53,8 @@ export default function RootLayout({
             <main className="flex-1 overflow-hidden relative h-full">
               {children}
             </main>
+
+            <PublishSidebar />
           </div>
         </BoardProvider>
       </body>

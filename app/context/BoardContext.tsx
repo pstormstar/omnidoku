@@ -33,6 +33,8 @@ interface BoardContextType {
   removeSandwich: (row?: number, col?: number) => void;
   sandwichSum: number;
   setSandwichSum: (sum: number) => void;
+  isPublishSidebarOpen: boolean;
+  setIsPublishSidebarOpen: (val: boolean) => void;
 }
 
 const BoardContext = createContext<BoardContextType | undefined>(undefined);
@@ -48,6 +50,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   const [activeClueSubType, setActiveClueSubType] = useState<"black" | "white" | ">" | "<" | null>(null);
   const [clueSelectionFirst, setClueSelectionFirst] = useState<{ r: number; c: number } | null>(null);
   const [sandwichSum, setSandwichSum] = useState<number>(0);
+  const [isPublishSidebarOpen, setIsPublishSidebarOpen] = useState(false);
 
   const setGameMode = (mode: GameMode) => {
     setGameModeState(mode);
@@ -164,7 +167,8 @@ export function BoardProvider({ children }: { children: ReactNode }) {
       activeClueSubType, setActiveClueSubType,
       clueSelectionFirst, setClueSelectionFirst,
       removeAdjacentClue, removeSandwich,
-      sandwichSum, setSandwichSum
+      sandwichSum, setSandwichSum,
+      isPublishSidebarOpen, setIsPublishSidebarOpen
     }}>
       {children}
     </BoardContext.Provider>

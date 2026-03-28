@@ -87,7 +87,10 @@ export const BOX_H = 3;
 export interface PuzzleDef {
   title?: string;
   author?: string;
-  rules?: string;
+  description?: string;
+  customRules?: string;
+  aiIncludeTitle?: boolean;
+  aiIncludeRules?: boolean;
 
   /**
    * Defined grids in this multisudoku
