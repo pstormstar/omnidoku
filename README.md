@@ -2,8 +2,6 @@
 
 Omnidoku is a powerful, professional-grade Sudoku design and play engine. Built for power-users and grid designers, it supports an extensive range of variants, multi-grid layouts (Multisudoku), and advanced logic constraints.
 
-![Omnidoku Logo](app/favicon.ico)
-
 ## 🌟 Key Features
 
 ### 🧩 Grid Meta-Variants
