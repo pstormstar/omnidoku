@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "python-install": "pip3 install --no-cache-dir -r requirements.txt -t .python_packages || pip install --no-cache-dir -r requirements.txt -t .python_packages",
+    "build": "npm run python-install && next build",
     "start": "next start",
     "lint": "eslint"
   },

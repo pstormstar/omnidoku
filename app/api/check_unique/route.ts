@@ -19,10 +19,11 @@ export async function POST(req: NextRequest) {
     await writeFile(tempFilePath, JSON.stringify(puzzle), "utf8");
 
     const scriptPath = join(process.cwd(), "scripts", "check_unique.py");
-    const cmd = `python "${scriptPath}" "${tempFilePath}"`;
+    const pythonBin = process.env.VERCEL ? "python3" : (process.platform === "win32" ? "python" : "python3");
+    const cmd = `${pythonBin} "${scriptPath}" "${tempFilePath}"`;
 
     return new Promise<NextResponse>((resolve) => {
-      exec(cmd, async (error, stdout, stderr) => {
+      exec(cmd, { env: { ...process.env, PYTHONPATH: join(process.cwd(), ".python_packages") } }, async (error, stdout, stderr) => {
         try {
           await unlink(tempFilePath);
         } catch (err) {

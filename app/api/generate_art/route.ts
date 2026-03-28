@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     
     // Build the command with metadata arguments
     // We escape double quotes to handle common text inputs
-    let cmd = `python "${scriptPath}" --image "${tempFilePath}" --prompt "${prompt.replace(/"/g, '\\"')}"`;
+    const pythonBin = process.env.VERCEL ? "python3" : (process.platform === "win32" ? "python" : "python3");
+    let cmd = `${pythonBin} "${scriptPath}" --image "${tempFilePath}" --prompt "${prompt.replace(/"/g, '\\"')}"`;
     
     if (apiKey) cmd += ` --api_key "${apiKey}"`;
     if (title) cmd += ` --title "${title.replace(/"/g, '\\"')}"`;
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
     }
 
     return new Promise<NextResponse>((resolve) => {
-      exec(cmd, async (error, stdout, stderr) => {
+      exec(cmd, { env: { ...process.env, PYTHONPATH: join(process.cwd(), ".python_packages") } }, async (error, stdout, stderr) => {
         // Cleanup
         try {
           await unlink(tempFilePath);
