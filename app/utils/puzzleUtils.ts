@@ -1,26 +1,10 @@
-import { PuzzleDef, CellData, Region, Position, GridDef } from "../types/puzzle";
+import { PuzzleDef, CellData, Region, Position, GridDef, GRID_SIZE, BOX_W, BOX_H } from "../types/puzzle";
 
-export function getBoxGeometry(size: number): { boxW: number; boxH: number } {
-  if (size === 4) return { boxW: 2, boxH: 2 };
-  if (size === 6) return { boxW: 3, boxH: 2 };
-  if (size === 8) return { boxW: 4, boxH: 2 };
-  if (size === 9) return { boxW: 3, boxH: 3 };
-  if (size === 10) return { boxW: 5, boxH: 2 };
-  if (size === 12) return { boxW: 4, boxH: 3 };
-  if (size === 15) return { boxW: 5, boxH: 3 };
-  if (size === 16) return { boxW: 4, boxH: 4 };
-  return { boxW: size, boxH: size }; // Generic for others (Jigsaw)
-}
-
-export function createEmptyPuzzle(size: number): PuzzleDef {
-  const { boxW, boxH } = getBoxGeometry(size);
+export function createEmptyPuzzle(): PuzzleDef {
   const initialGrid: GridDef = {
     id: "g1",
     r: 0,
     c: 0,
-    size,
-    boxW,
-    boxH,
     pivotR: 0,
     pivotC: 0,
     dr: 1,
@@ -34,9 +18,9 @@ export function mergeGridIntoPuzzle(puzzle: PuzzleDef, grid: GridDef): PuzzleDef
   const newCells = { ...puzzle.cells };
   const newRegions = [...puzzle.regions];
 
-  // Add cells
-  for (let dr = 0; dr < grid.size; dr++) {
-    for (let dc = 0; dc < grid.size; dc++) {
+  // Add cells (always 9x9)
+  for (let dr = 0; dr < GRID_SIZE; dr++) {
+    for (let dc = 0; dc < GRID_SIZE; dc++) {
       const r = grid.r + dr;
       const c = grid.c + dc;
       const key = `${r},${c}`;
@@ -46,24 +30,21 @@ export function mergeGridIntoPuzzle(puzzle: PuzzleDef, grid: GridDef): PuzzleDef
     }
   }
 
-  // Add regions ONLY if NOT jigsaw AND size is standard
-  const standardSizes = [4, 6, 8, 9, 10, 12, 15, 16];
-  if (!grid.isJigsaw && standardSizes.includes(grid.size)) {
-    for (let boxR = 0; boxR < grid.size / grid.boxH; boxR++) {
-      for (let boxC = 0; boxC < grid.size / grid.boxW; boxC++) {
-        const regionCells: Position[] = [];
-        for (let i = 0; i < grid.boxH; i++) {
-          for (let j = 0; j < grid.boxW; j++) {
-            regionCells.push({ r: grid.r + boxR * grid.boxH + i, c: grid.c + boxC * grid.boxW + j });
-          }
+  // Add standard 3x3 box regions
+  for (let boxR = 0; boxR < GRID_SIZE / BOX_H; boxR++) {
+    for (let boxC = 0; boxC < GRID_SIZE / BOX_W; boxC++) {
+      const regionCells: Position[] = [];
+      for (let i = 0; i < BOX_H; i++) {
+        for (let j = 0; j < BOX_W; j++) {
+          regionCells.push({ r: grid.r + boxR * BOX_H + i, c: grid.c + boxC * BOX_W + j });
         }
-        newRegions.push({ 
-          id: `box-${grid.id}-${boxR}_${boxC}`,
-          type: 'box',
-          cells: regionCells, 
-          gridId: grid.id 
-        });
       }
+      newRegions.push({ 
+        id: `box-${grid.id}-${boxR}_${boxC}`,
+        type: 'box',
+        cells: regionCells, 
+        gridId: grid.id 
+      });
     }
   }
 

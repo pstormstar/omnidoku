@@ -2,25 +2,29 @@
 
 import { useState, useRef } from "react";
 import { useBoard } from "../context/BoardContext";
+import { createEmptyPuzzle } from "../utils/puzzleUtils";
 
-const TABS = ["General", "Clues", "Support"] as const;
+const TABS = ["General", "Clues"] as const;
 type Tab = (typeof TABS)[number];
 
 const CLUE_SUBTABS = ["region", "adjacent", "outside", "global"] as const;
 type ClueSubtab = (typeof CLUE_SUBTABS)[number];
-
-const STANDARD_SIZES = [4, 6, 8, 9, 10, 12, 15, 16];
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<Tab>("General");
   const [activeClueSubtab, setActiveClueSubtab] = useState<ClueSubtab>("region");
   
   const {
-    gameMode, gridSize, setGridSize,
-    puzzle, selectedGridId, setSelectedGridId,
+    gameMode, setGameMode,
+    puzzle, setPuzzle,
+    selectedGridId, setSelectedGridId,
     isAddingGrid, setIsAddingGrid,
     selectionMode, setSelectionMode,
-    removeGrid
+    removeGrid,
+    activeClueType, setActiveClueType,
+    activeClueSubType, setActiveClueSubType,
+    setClueSelectionFirst,
+    sandwichSum, setSandwichSum
   } = useBoard();
   const [isMinimized, setIsMinimized] = useState(false);
   const [width, setWidth] = useState(33); // Starting with 33%
@@ -99,11 +103,142 @@ export default function Sidebar() {
     setIsCheckingUnique(false);
   };
 
+  const isWindokuActive = selectedGridId && puzzle.regions.some(r => r.gridId === selectedGridId && r.id.startsWith("windoku-"));
+
+  const toggleWindoku = () => {
+    if (!selectedGridId) return;
+    setPuzzle(prev => {
+      const next = { ...prev, regions: [...prev.regions] };
+      const hasWindoku = next.regions.some(r => r.gridId === selectedGridId && r.id.startsWith("windoku-"));
+      if (hasWindoku) {
+        next.regions = next.regions.filter(r => r.gridId !== selectedGridId || !r.id.startsWith("windoku-"));
+      } else {
+        const grid = prev.grids.find(g => g.id === selectedGridId);
+        if (!grid) return prev;
+        
+        const offsets = [
+          { r: 1, c: 1 }, { r: 1, c: 5 },
+          { r: 5, c: 1 }, { r: 5, c: 5 }
+        ];
+        
+        offsets.forEach((pos, idx) => {
+          const cells = [];
+          for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+              cells.push({ r: grid.r + pos.r + i, c: grid.c + pos.c + j });
+            }
+          }
+          next.regions.push({
+            id: `windoku-${selectedGridId}-${idx}`,
+            type: "variant",
+            cells,
+            gridId: selectedGridId
+          });
+        });
+      }
+      return next;
+    });
+  };
+
+  const isDiagonalActive = selectedGridId && puzzle.regions.some(r => r.gridId === selectedGridId && r.id.startsWith("diagonal-"));
+
+  const isAsteriskActive = selectedGridId && puzzle.regions.some(r => r.gridId === selectedGridId && r.id.startsWith("asterisk-"));
+
+  const toggleAsterisk = () => {
+    if (!selectedGridId) return;
+    setPuzzle(prev => {
+      const next = { ...prev, regions: [...prev.regions] };
+      const hasAsterisk = next.regions.some(r => r.gridId === selectedGridId && r.id.startsWith("asterisk-"));
+      if (hasAsterisk) {
+        next.regions = next.regions.filter(r => r.gridId !== selectedGridId || !r.id.startsWith("asterisk-"));
+      } else {
+        const grid = prev.grids.find(g => g.id === selectedGridId);
+        if (!grid) return prev;
+        
+        const centerR = grid.r + 4;
+        const centerC = grid.c + 4;
+        const asteriskCells = [
+          {r: centerR, c: centerC}, // Center
+          {r: centerR - 3, c: centerC}, // Top
+          {r: centerR + 3, c: centerC}, // Bottom
+          {r: centerR, c: centerC - 3}, // Left
+          {r: centerR, c: centerC + 3}, // Right
+          {r: centerR - 2, c: centerC - 2}, // Top Left
+          {r: centerR - 2, c: centerC + 2}, // Top Right
+          {r: centerR + 2, c: centerC - 2}, // Bottom Left
+          {r: centerR + 2, c: centerC + 2}, // Bottom Right
+        ];
+        
+        next.regions.push({
+          id: `asterisk-${selectedGridId}`,
+          type: "variant",
+          cells: asteriskCells,
+          gridId: selectedGridId
+        });
+      }
+      return next;
+    });
+  };
+
+  const isCenterDotsActive = selectedGridId && puzzle.regions.some(r => r.gridId === selectedGridId && r.id.startsWith("centerdots-"));
+
+  const toggleCenterDots = () => {
+    if (!selectedGridId) return;
+    setPuzzle(prev => {
+      const next = { ...prev, regions: [...prev.regions] };
+      const hasCenterDots = next.regions.some(r => r.gridId === selectedGridId && r.id.startsWith("centerdots-"));
+      if (hasCenterDots) {
+        next.regions = next.regions.filter(r => r.gridId !== selectedGridId || !r.id.startsWith("centerdots-"));
+      } else {
+        const grid = prev.grids.find(g => g.id === selectedGridId);
+        if (!grid) return prev;
+        
+        const centerCells = [];
+        for (let bx = 0; bx < 3; bx++) {
+          for (let by = 0; by < 3; by++) {
+            centerCells.push({ r: grid.r + bx * 3 + 1, c: grid.c + by * 3 + 1 });
+          }
+        }
+        
+        next.regions.push({
+          id: `centerdots-${selectedGridId}`,
+          type: "variant",
+          cells: centerCells,
+          gridId: selectedGridId
+        });
+      }
+      return next;
+    });
+  };
+
+  const toggleDiagonal = () => {
+    if (!selectedGridId) return;
+    setPuzzle(prev => {
+      const next = { ...prev, regions: [...prev.regions] };
+      const hasDiagonal = next.regions.some(r => r.gridId === selectedGridId && r.id.startsWith("diagonal-"));
+      if (hasDiagonal) {
+        next.regions = next.regions.filter(r => r.gridId !== selectedGridId || !r.id.startsWith("diagonal-"));
+      } else {
+        const grid = prev.grids.find(g => g.id === selectedGridId);
+        if (!grid) return prev;
+        
+        const diag1 = [], diag2 = [];
+        for (let i = 0; i < 9; i++) {
+            diag1.push({ r: grid.r + i, c: grid.c + i });
+            diag2.push({ r: grid.r + i, c: grid.c + (9 - 1 - i) });
+        }
+        next.regions.push({ id: `diagonal-${selectedGridId}-1`, type: "variant", cells: diag1, gridId: selectedGridId });
+        next.regions.push({ id: `diagonal-${selectedGridId}-2`, type: "variant", cells: diag2, gridId: selectedGridId });
+      }
+      return next;
+    });
+  };
+
   if (isPlayMode) {
     return (
-      <aside className="w-10 border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 flex items-center justify-center relative overflow-hidden group hover:w-48 transition-all duration-500">
-        <div className="whitespace-nowrap -rotate-90 origin-center text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 group-hover:rotate-0 transition-transform duration-500">
-          DESIGN MODE REQUIRED FOR SIDEBAR
+      <aside className="w-10 border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 flex items-center justify-center relative overflow-hidden flex-shrink-0">
+        <div className="whitespace-nowrap -rotate-90 origin-center text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 select-none">
+          DESIGN MODE REQUIRED
         </div>
       </aside>
     );
@@ -113,8 +248,7 @@ export default function Sidebar() {
     <aside
       ref={sidebarRef}
       style={{ width: isMinimized ? "64px" : `${width}%` }}
-      className={`flex-shrink-0 border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950/50 hidden md:flex flex-col relative ${isDragging ? "" : "transition-[width] duration-500 cubic-bezier(0.2, 0.8, 0.2, 1)"
-        }`}
+      className={`flex-shrink-0 border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950/50 hidden md:flex flex-col relative`}
     >
       {/* Minimize / Expand Toggle */}
       {!isPlayMode && (
@@ -198,30 +332,6 @@ export default function Sidebar() {
                 </button>
               </div>
 
-              {/* Selection Mode Toggle */}
-              <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl relative">
-                <div 
-                   className="absolute h-8 bg-white dark:bg-zinc-700 rounded-lg transition-all duration-300 shadow-sm"
-                   style={{ 
-                     width: 'calc(50% - 4px)', 
-                     left: selectionMode === "grid" ? 'calc(50% + 2px)' : '2px' 
-                   }}
-                />
-                {(["cell", "grid"] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setSelectionMode(mode)}
-                    title={mode === "grid" ? "Grid Mode: Move and configure boards." : "Cell Mode: Focus on digit entry and cell navigation."}
-                    className={`flex-1 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-lg transition-all z-10 ${selectionMode === mode
-                        ? "text-zinc-900 dark:text-white"
-                        : "text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-400"
-                      }`}
-                  >
-                    {mode} Mode
-                  </button>
-                ))}
-              </div>
-
               {/* Multisudoku List */}
               <div className="space-y-4 pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50">
                 <div className="flex items-center justify-between px-1">
@@ -234,7 +344,7 @@ export default function Sidebar() {
                 </div>
 
                 <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
-                  {puzzle.grids.map((grid) => (
+                  {puzzle.grids.map((grid, index) => (
                     <button
                       key={grid.id}
                       onClick={() => {
@@ -250,7 +360,7 @@ export default function Sidebar() {
                       <div className="flex-1 flex items-center gap-3">
                         <div className="flex flex-col items-start translate-x-0 group-hover:translate-x-1 transition-transform">
                           <span className="text-sm font-black uppercase tracking-widest">
-                            {grid.size}x{grid.size}
+                            Grid {index + 1}
                           </span>
                         </div>
                       </div>
@@ -278,7 +388,7 @@ export default function Sidebar() {
                       setIsAddingGrid(!isAddingGrid);
                       if (!isAddingGrid) setSelectedGridId(null);
                     }}
-                    title="Anchor a new Sudoku grid into the world."
+                    title="Anchor a new 9x9 Sudoku grid into the world."
                     className={`w-full py-3 rounded-xl text-xs font-bold transition-all border-2 flex items-center justify-center gap-2 shadow-sm active:scale-95 ${isAddingGrid
                         ? "bg-teal-500 text-white border-teal-500 animate-pulse"
                         : "bg-zinc-50 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 dark:hover:border-zinc-500"
@@ -300,31 +410,25 @@ export default function Sidebar() {
                   </div>
                 )}
               </div>
-
-              {selectedGridId && selectionMode === "grid" && (
-                <div className="space-y-4 pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 animate-in slide-in-from-top-2 duration-300">
-                  <div className="space-y-4 px-1">
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1">
-                        Select Board Size
-                      </label>
-                      <div className="grid grid-cols-4 gap-2">
-                         {STANDARD_SIZES.map(size => (
-                           <button
-                             key={size}
-                             onClick={() => setGridSize(size)}
-                             className={`py-3 rounded-lg text-xs font-black transition-all ${gridSize === size 
-                               ? "bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 scale-105" 
-                               : "bg-zinc-50 text-zinc-500 border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 hover:border-zinc-300"}`}
-                           >
-                             {size}
-                           </button>
-                         ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              
+              {/* Reset Workspace */}
+              <div className="pt-6 mt-6 border-t border-zinc-200/50 dark:border-zinc-800/50">
+                <button
+                  onClick={() => {
+                    if (confirm("Are you sure you want to reset the entire workspace? All grids and digits will be lost.")) {
+                      setSelectedGridId(null);
+                      setPuzzle(createEmptyPuzzle());
+                    }
+                  }}
+                  title="Clear all grids and reset to a single blank 9x9 Sudoku."
+                  className="w-full py-4 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 active:scale-95 transition-all text-red-600 dark:text-red-400 text-[10px] font-black tracking-widest uppercase flex flex-col items-center justify-center gap-1.5 shadow-sm border border-red-200 dark:border-red-500/20"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  RESET WORKSPACE
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -351,7 +455,91 @@ export default function Sidebar() {
                 {activeClueSubtab === "region" && (
                   <div className="space-y-4">
                      <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Region Clues</h4>
-                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4">
+                     
+                     <button
+                        disabled={!selectedGridId}
+                        onClick={toggleWindoku}
+                        title={!selectedGridId ? "Select a grid first." : (isWindokuActive ? "Remove Windoku constraint" : "Add Windoku constraint")}
+                        className={`w-full p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all ${isWindokuActive 
+                          ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/30" 
+                          : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+                        } ${!selectedGridId ? "opacity-50 cursor-not-allowed" : "active:scale-[0.98]"}`}
+                      >
+                         <div className="flex-1 space-y-1">
+                            <span className={`text-xs font-bold uppercase tracking-widest block ${isWindokuActive ? "text-indigo-600 dark:text-indigo-400" : "text-zinc-600 dark:text-zinc-300"}`}>Windoku</span>
+                            <span className="text-[10px] font-medium text-zinc-500 opacity-80 leading-snug block">
+                               Adds 4 independent 3x3 regions to the selected grid that must contain 1-9 uniquely.
+                            </span>
+                         </div>
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${isWindokuActive ? "bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
+                            {isWindokuActive ? (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            ) : (
+                              <div className="grid grid-cols-2 gap-0.5 opacity-60">
+                                <div className="w-2 h-2 bg-current rounded-sm"></div>
+                                <div className="w-2 h-2 bg-current rounded-sm"></div>
+                                <div className="w-2 h-2 bg-current rounded-sm"></div>
+                                <div className="w-2 h-2 bg-current rounded-sm"></div>
+                              </div>
+                            )}
+                         </div>
+                      </button>
+
+                     <div className="space-y-2 mt-4">
+                       <button
+                          disabled={!selectedGridId}
+                          onClick={toggleAsterisk}
+                          title={!selectedGridId ? "Select a grid first." : (isAsteriskActive ? "Remove Asterisk constraint" : "Add Asterisk constraint")}
+                          className={`w-full p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all ${isAsteriskActive 
+                            ? "bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30" 
+                            : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+                          } ${!selectedGridId ? "opacity-50 cursor-not-allowed" : "active:scale-[0.98]"}`}
+                        >
+                           <div className="flex-1 space-y-1">
+                              <span className={`text-xs font-bold uppercase tracking-widest block ${isAsteriskActive ? "text-amber-600 dark:text-amber-400" : "text-zinc-600 dark:text-zinc-300"}`}>Asterisk</span>
+                              <span className="text-[10px] font-medium text-zinc-500 opacity-80 leading-snug block">
+                                 Specific 9 shaded cells in a star pattern must contain 1-9 uniquely.
+                              </span>
+                           </div>
+                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${isAsteriskActive ? "bg-amber-100 text-amber-500 dark:bg-amber-500/20" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
+                              {isAsteriskActive ? (
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4m12 5.657l-8-11.314m0 11.314l8-11.314" /></svg>
+                              ) : (
+                                <svg className="w-5 h-5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4m12 5.657l-8-11.314m0 11.314l8-11.314" /></svg>
+                              )}
+                           </div>
+                        </button>
+
+                       <button
+                          disabled={!selectedGridId}
+                          onClick={toggleCenterDots}
+                          title={!selectedGridId ? "Select a grid first." : (isCenterDotsActive ? "Remove Center Dots constraint" : "Add Center Dots constraint")}
+                          className={`w-full p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all ${isCenterDotsActive 
+                            ? "bg-fuchsia-50 border-fuchsia-200 dark:bg-fuchsia-500/10 dark:border-fuchsia-500/30" 
+                            : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+                          } ${!selectedGridId ? "opacity-50 cursor-not-allowed" : "active:scale-[0.98]"}`}
+                        >
+                           <div className="flex-1 space-y-1">
+                              <span className={`text-xs font-bold uppercase tracking-widest block ${isCenterDotsActive ? "text-fuchsia-600 dark:text-fuchsia-400" : "text-zinc-600 dark:text-zinc-300"}`}>Center Dots</span>
+                              <span className="text-[10px] font-medium text-zinc-500 opacity-80 leading-snug block">
+                                 The center cell of all nine 3x3 boxes form a valid set of 1-9.
+                              </span>
+                           </div>
+                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${isCenterDotsActive ? "bg-fuchsia-100 text-fuchsia-500 dark:bg-fuchsia-500/20" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
+                              {isCenterDotsActive ? (
+                                <div className="grid grid-cols-3 gap-0.5">
+                                  {[...Array(9)].map((_, i) => <div key={i} className="w-1 h-1 bg-current rounded-full"></div>)}
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-3 gap-0.5 opacity-60">
+                                  {[...Array(9)].map((_, i) => <div key={i} className="w-1 h-1 bg-current rounded-full"></div>)}
+                                </div>
+                              )}
+                           </div>
+                        </button>
+                     </div>
+
+                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4 mt-4">
                         <svg className="w-8 h-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM9 4v16m6-16v16M4 9h16M4 15h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
                         <p className="text-[10px] text-zinc-500 font-medium leading-relaxed max-w-[150px]">Custom Jigsaw and Killer Region tools will appear here.</p>
                      </div>
@@ -360,27 +548,243 @@ export default function Sidebar() {
                 {activeClueSubtab === "adjacent" && (
                   <div className="space-y-4">
                      <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Adjacent Clues</h4>
-                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4">
-                        <svg className="w-8 h-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 7h8M8 12h8m-8 5h8" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
-                        <p className="text-[10px] text-zinc-500 font-medium leading-relaxed max-w-[150px]">Kropki Dots, XV Clues, and White/Black dots will appear here.</p>
+                     <div className="grid grid-cols-2 gap-3">
+                        {(["X", "V"] as const).map((type) => (
+                           <button
+                              key={type}
+                              onClick={() => {
+                                 if (activeClueType === type) {
+                                    setActiveClueType(null);
+                                    setActiveClueSubType(null);
+                                    setClueSelectionFirst(null);
+                                 } else {
+                                    setActiveClueType(type);
+                                    setActiveClueSubType(null);
+                                    setClueSelectionFirst(null);
+                                 }
+                              }}
+                              className={`p-4 border-2 rounded-2xl flex flex-col items-center gap-2 transition-all ${activeClueType === type
+                                 ? "bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-50 dark:border-zinc-50 dark:text-zinc-900 shadow-lg"
+                                 : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 text-zinc-500"
+                              }`}
+                           >
+                              <span className="text-xl font-black">{type}</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest">{type === "X" ? "Sum 10" : "Sum 5"}</span>
+                           </button>
+                        ))}
+                        {([
+                            { subType: "white", label: "White Dot", desc: "Consecutive" },
+                            { subType: "black", label: "Black Dot", desc: "Ratio 1:2" }
+                        ] as const).map((k) => (
+                           <button
+                              key={k.subType}
+                              onClick={() => {
+                                 if (activeClueType === "Kropki" && activeClueSubType === k.subType) {
+                                    setActiveClueType(null);
+                                    setActiveClueSubType(null);
+                                    setClueSelectionFirst(null);
+                                 } else {
+                                    setActiveClueType("Kropki");
+                                    setActiveClueSubType(k.subType);
+                                    setClueSelectionFirst(null);
+                                 }
+                              }}
+                              className={`p-4 border-2 rounded-2xl flex flex-col items-center gap-2 transition-all ${activeClueType === "Kropki" && activeClueSubType === k.subType
+                                 ? "bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-50 dark:border-zinc-50 dark:text-zinc-900 shadow-lg"
+                                 : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 text-zinc-500"
+                              }`}
+                           >
+                              <div className={`w-8 h-8 rounded-full shadow-sm border ${k.subType === "black" 
+                                ? "bg-zinc-900 border-zinc-900 dark:bg-white dark:border-white" 
+                                : "bg-white border-zinc-400 dark:bg-zinc-50 dark:border-zinc-600"}`} 
+                              />
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-center">{k.label}</span>
+                           </button>
+                        ))}
+                        {([
+                            { subType: ">", label: "Greater Than", icon: ">" },
+                            { subType: "<", label: "Less Than", icon: "<" }
+                        ] as const).map((ik) => (
+                           <button
+                              key={ik.subType}
+                              onClick={() => {
+                                 if (activeClueType === "Inequality" && activeClueSubType === ik.subType) {
+                                    setActiveClueType(null);
+                                    setActiveClueSubType(null);
+                                    setClueSelectionFirst(null);
+                                 } else {
+                                    setActiveClueType("Inequality");
+                                    setActiveClueSubType(ik.subType);
+                                    setClueSelectionFirst(null);
+                                 }
+                              }}
+                              className={`p-4 border-2 rounded-2xl flex flex-col items-center gap-2 transition-all ${activeClueType === "Inequality" && activeClueSubType === ik.subType
+                                 ? "bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-50 dark:border-zinc-50 dark:text-zinc-900 shadow-lg"
+                                 : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 text-zinc-500"
+                              }`}
+                           >
+                              <span className="text-xl font-black">{ik.icon}</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-center">{ik.label}</span>
+                           </button>
+                        ))}
                      </div>
+                      <div className="pt-2">
+                         <button
+                            onClick={() => {
+                               setPuzzle(prev => ({ ...prev, allXVGiven: !prev.allXVGiven }));
+                            }}
+                            className={`w-full p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all ${puzzle.allXVGiven 
+                              ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30" 
+                              : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+                            } active:scale-[0.98]`}
+                         >
+                            <div className="flex-1 space-y-1">
+                               <span className={`text-xs font-bold uppercase tracking-widest block ${puzzle.allXVGiven ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-600 dark:text-zinc-300"}`}>All XV Given</span>
+                               <span className="text-[10px] font-medium text-zinc-500 opacity-80 leading-snug block">
+                                  Negative constraint: If no clue is present, adjacent cells CANNOT sum to 5 or 10.
+                               </span>
+                            </div>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${puzzle.allXVGiven ? "bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
+                               <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${puzzle.allXVGiven ? "border-emerald-500 bg-emerald-500 text-white" : "border-zinc-300 dark:border-zinc-600"}`}>
+                                 {puzzle.allXVGiven && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                               </div>
+                            </div>
+                         </button>
+                         
+                         <button
+                            onClick={() => {
+                               setPuzzle(prev => ({ ...prev, allKropkiGiven: !prev.allKropkiGiven }));
+                            }}
+                            className={`w-full p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all mt-2 ${puzzle.allKropkiGiven 
+                              ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30" 
+                              : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+                            } active:scale-[0.98]`}
+                         >
+                            <div className="flex-1 space-y-1">
+                               <span className={`text-xs font-bold uppercase tracking-widest block ${puzzle.allKropkiGiven ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-600 dark:text-zinc-300"}`}>All Kropki Given</span>
+                               <span className="text-[10px] font-medium text-zinc-500 opacity-80 leading-snug block">
+                                  Negative constraint: If no dot is present, adjacent cells cannot be consecutive or have a 1:2 ratio.
+                               </span>
+                            </div>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${puzzle.allKropkiGiven ? "bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
+                               <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${puzzle.allKropkiGiven ? "border-emerald-500 bg-emerald-500 text-white" : "border-zinc-300 dark:border-zinc-600"}`}>
+                                 {puzzle.allKropkiGiven && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                               </div>
+                            </div>
+                         </button>
+                      </div>
+
+                      <p className="text-[10px] text-zinc-500 font-medium leading-relaxed px-1 italic">
+                        Select a clue type, then click two adjacent cells on the board to place the clue.
+                      </p>
                   </div>
                 )}
                 {activeClueSubtab === "outside" && (
                   <div className="space-y-4">
-                     <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Outside Clues</h4>
-                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4">
-                        <svg className="w-8 h-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
-                        <p className="text-[10px] text-zinc-500 font-medium leading-relaxed max-w-[150px]">Sandwich Sudoku and Little Killer Arrow tools will appear here.</p>
+                     <div className="flex items-center justify-between px-1">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Outside Clues</h4>
+                     </div>
+
+                     <div className="grid grid-cols-1 gap-3">
+                        <button
+                           onClick={() => {
+                              if (activeClueType === "Sandwich") {
+                                 setActiveClueType(null);
+                              } else {
+                                 setActiveClueType("Sandwich");
+                              }
+                           }}
+                           className={`p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all ${activeClueType === "Sandwich"
+                              ? "bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-50 dark:border-zinc-50 dark:text-zinc-900 shadow-lg"
+                              : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 text-zinc-500"
+                           }`}
+                        >
+                           <div className="flex-1 space-y-1">
+                              <span className="text-xs font-bold uppercase tracking-widest block">Sandwich Clue</span>
+                              <span className="text-[10px] font-medium opacity-80 leading-snug block">
+                                 The sum of digits between 1 and 9 in a row or column.
+                              </span>
+                           </div>
+                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 border-transparent transition-all flex-shrink-0 ml-3 ${activeClueType === "Sandwich" ? "bg-white/10 dark:bg-black/10" : "bg-zinc-100 dark:bg-zinc-800"}`}>
+                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                 <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}/>
+                              </svg>
+                           </div>
+                        </button>
+                     </div>
+
+                     <div className="p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl transition-all border border-zinc-100 dark:border-zinc-800">
+                        <p className="text-[10px] text-zinc-500 font-medium leading-relaxed px-1">
+                           {activeClueType === "Sandwich" 
+                             ? "Click on the highlighted areas outside the grids to place a Sandwich clue with the chosen sum."
+                             : "Select a clue type to begin building outside constraints."}
+                        </p>
                      </div>
                   </div>
                 )}
                 {activeClueSubtab === "global" && (
                   <div className="space-y-4">
                      <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Global Constraints</h4>
-                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4">
-                        <svg className="w-8 h-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
-                        <p className="text-[10px] text-zinc-500 font-medium leading-relaxed max-w-[150px]">Anti-King, Anti-Knight, and Non-Consecutive constraints.</p>
+                     
+                     <div className="space-y-2">
+                        <button
+                           onClick={() => setPuzzle(prev => ({ ...prev, antiknight: !prev.antiknight }))}
+                           className={`w-full p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all ${puzzle.antiknight 
+                             ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/30" 
+                             : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+                           } active:scale-[0.98]`}
+                         >
+                            <div className="flex-1 space-y-1">
+                               <span className={`text-xs font-bold uppercase tracking-widest block ${puzzle.antiknight ? "text-indigo-600 dark:text-indigo-400" : "text-zinc-600 dark:text-zinc-300"}`}>Anti-Knight</span>
+                               <span className="text-[10px] font-medium text-zinc-500 opacity-80 leading-snug block">
+                                  No two identical digits can be a knight's move apart.
+                               </span>
+                            </div>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${puzzle.antiknight ? "bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
+                               <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4l-4 4-4 4m0 0l4 4 4 4M8 12h12" /></svg>
+                            </div>
+                         </button>
+
+                         <button
+                           onClick={() => setPuzzle(prev => ({ ...prev, antiking: !prev.antiking }))}
+                           className={`w-full p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all ${puzzle.antiking 
+                             ? "bg-rose-50 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/30" 
+                             : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+                           } active:scale-[0.98]`}
+                         >
+                            <div className="flex-1 space-y-1">
+                               <span className={`text-xs font-bold uppercase tracking-widest block ${puzzle.antiking ? "text-rose-600 dark:text-rose-400" : "text-zinc-600 dark:text-zinc-300"}`}>Anti-King</span>
+                               <span className="text-[10px] font-medium text-zinc-500 opacity-80 leading-snug block">
+                                  No two identical digits can be a king's move apart.
+                               </span>
+                            </div>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${puzzle.antiking ? "bg-rose-100 text-rose-500 dark:bg-rose-500/20" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
+                               <svg className="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 13L19 19M5 5L11 11M19 5L13 11M5 19L11 13M12 3V21M3 12H21" /></svg>
+                            </div>
+                         </button>
+
+                         <button
+                           onClick={() => setPuzzle(prev => ({ ...prev, nonConsecutive: !prev.nonConsecutive }))}
+                           className={`w-full p-4 border-2 rounded-2xl flex items-center justify-between text-left transition-all ${puzzle.nonConsecutive 
+                             ? "bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30" 
+                             : "bg-white border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+                           } active:scale-[0.98]`}
+                         >
+                            <div className="flex-1 space-y-1">
+                               <span className={`text-xs font-bold uppercase tracking-widest block ${puzzle.nonConsecutive ? "text-amber-600 dark:text-amber-400" : "text-zinc-600 dark:text-zinc-300"}`}>Non-Consecutive</span>
+                               <span className="text-[10px] font-medium text-zinc-500 opacity-80 leading-snug block">
+                                  Orthogonally adjacent cells CANNOT contain consecutive digits.
+                               </span>
+                            </div>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 border-transparent transition-all overflow-hidden flex-shrink-0 ml-3 ${puzzle.nonConsecutive ? "bg-amber-100 text-amber-500 dark:bg-amber-500/20" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"}`}>
+                               <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </div>
+                         </button>
+                     </div>
+
+                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4 mt-4">
+                        <svg className="w-8 h-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8V12L15 15" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/><circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
+                        <p className="text-[10px] text-zinc-500 font-medium leading-relaxed max-w-[150px]">Global constraints apply to every cell on every grid.</p>
                      </div>
                   </div>
                 )}
@@ -388,17 +792,7 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* Support Tab */}
-        {activeTab === "Support" && (
-          <div className="space-y-4">
-            {["User Guide", "Keyboard Shortcuts", "API References"].map((item) => (
-              <a key={item} href="#" className="flex items-center justify-between p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
-                <span className="text-sm">{item}</span>
-                <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
-              </a>
-            ))}
-          </div>
-        )}
+
       </div>
 
       {/* Validity Feedback Modal */}

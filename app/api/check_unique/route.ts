@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const scriptPath = join(process.cwd(), "scripts", "check_unique.py");
     const cmd = `python "${scriptPath}" "${tempFilePath}"`;
 
-    return new Promise((resolve) => {
+    return new Promise<NextResponse>((resolve) => {
       exec(cmd, async (error, stdout, stderr) => {
         try {
           await unlink(tempFilePath);

@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
-import { PuzzleDef, GridDef } from "../types/puzzle";
-import { createEmptyPuzzle, mergeGridIntoPuzzle, getBoxGeometry } from "../utils/puzzleUtils";
+import { PuzzleDef, GridDef, GRID_SIZE } from "../types/puzzle";
+import { createEmptyPuzzle, mergeGridIntoPuzzle } from "../utils/puzzleUtils";
 
 export type GameMode = "design" | "play";
 
@@ -10,74 +10,48 @@ interface BoardContextType {
   gameMode: GameMode;
   setGameMode: (mode: GameMode) => void;
   isMarkerActive: boolean;
-  gridSize: number;
-  setGridSize: (size: number) => void;
   selectedGridId: string | null;
   setSelectedGridId: (id: string | null) => void;
   isAddingGrid: boolean;
   setIsAddingGrid: (val: boolean) => void;
   placementPivot: { r: number; c: number } | null;
   setPlacementPivot: (pos: { r: number; c: number } | null) => void;
-  addGrid: (r: number, c: number, size: number, pivotR: number, pivotC: number, dr: number, dc: number) => void;
+  addGrid: (r: number, c: number, pivotR: number, pivotC: number, dr: number, dc: number) => void;
   moveGrid: (gridId: string, dr: number, dc: number) => void;
   removeGrid: (gridId: string) => void;
-  setJigsawMode: (gridId: string, val: boolean) => void;
   selectionMode: "grid" | "cell";
   setSelectionMode: (mode: "grid" | "cell") => void;
   puzzle: PuzzleDef;
   setPuzzle: (puzzle: PuzzleDef | ((prev: PuzzleDef) => PuzzleDef)) => void;
+  activeClueType: "X" | "V" | "Kropki" | "Inequality" | "Sandwich" | null;
+  setActiveClueType: (type: "X" | "V" | "Kropki" | "Inequality" | "Sandwich" | null) => void;
+  activeClueSubType: "black" | "white" | ">" | "<" | null;
+  setActiveClueSubType: (subType: "black" | "white" | ">" | "<" | null) => void;
+  clueSelectionFirst: { r: number; c: number } | null;
+  setClueSelectionFirst: (pos: { r: number; c: number } | null) => void;
+  removeAdjacentClue: (pos1: { r: number; c: number }, pos2: { r: number; c: number }) => void;
+  removeSandwich: (row?: number, col?: number) => void;
+  sandwichSum: number;
+  setSandwichSum: (sum: number) => void;
 }
 
 const BoardContext = createContext<BoardContextType | undefined>(undefined);
 
 export function BoardProvider({ children }: { children: ReactNode }) {
   const [gameMode, setGameModeState] = useState<GameMode>("design");
-  const [gridSize, setGridSizeState] = useState(9);
-  const [puzzle, setPuzzle] = useState<PuzzleDef>(createEmptyPuzzle(9));
+  const [puzzle, setPuzzle] = useState<PuzzleDef>(createEmptyPuzzle());
   const [selectedGridId, setSelectedGridId] = useState<string | null>(null);
   const [isAddingGrid, setIsAddingGrid] = useState(false);
   const [placementPivot, setPlacementPivot] = useState<{ r: number; c: number } | null>(null);
   const [selectionMode, setSelectionMode] = useState<"grid" | "cell">("cell");
+  const [activeClueType, setActiveClueType] = useState<"X" | "V" | "Kropki" | "Inequality" | "Sandwich" | null>(null);
+  const [activeClueSubType, setActiveClueSubType] = useState<"black" | "white" | ">" | "<" | null>(null);
+  const [clueSelectionFirst, setClueSelectionFirst] = useState<{ r: number; c: number } | null>(null);
+  const [sandwichSum, setSandwichSum] = useState<number>(0);
 
   const setGameMode = (mode: GameMode) => {
     setGameModeState(mode);
     if (mode === "play") setSelectionMode("cell");
-  };
-
-  const setGridSize = (size: number) => {
-    setGridSizeState(size);
-    if (selectedGridId) {
-      setPuzzle(prev => {
-        const grid = prev.grids.find(g => g.id === selectedGridId);
-        if (!grid) return prev;
-        
-        const newR = grid.dr === 1 ? grid.pivotR : grid.pivotR - size + 1;
-        const newC = grid.dc === 1 ? grid.pivotC : grid.pivotC - size + 1;
-
-        const { boxW, boxH } = getBoxGeometry(size);
-        const standardSizes = [4, 6, 8, 9, 10, 12, 15, 16];
-        const isSizeStandard = standardSizes.includes(size);
-
-        const newGrid: GridDef = { 
-          ...grid, 
-          size, 
-          r: newR, 
-          c: newC,
-          boxW,
-          boxH,
-          isJigsaw: !isSizeStandard
-        };
-        
-        let newPuzzle: PuzzleDef = { ...prev, grids: prev.grids.map(g => g.id === selectedGridId ? newGrid : g), cells: {}, regions: [] };
-        newPuzzle.grids.forEach(g => {
-          newPuzzle = mergeGridIntoPuzzle(newPuzzle, g);
-        });
-        return newPuzzle;
-      });
-    } else {
-      setGridSizeState(size);
-      setPuzzle(createEmptyPuzzle(size));
-    }
   };
 
   const moveGrid = (gridId: string, dr: number, dc: number) => {
@@ -95,8 +69,8 @@ export function BoardProvider({ children }: { children: ReactNode }) {
       
       const newCells = { ...prev.cells };
       const gridKeys = [];
-      for (let r = 0; r < grid.size; r++) {
-        for (let c = 0; c < grid.size; c++) {
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
            gridKeys.push(`${grid.r + r},${grid.c + c}`);
         }
       }
@@ -122,10 +96,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const addGrid = (r: number, c: number, size: number, pivotR: number, pivotC: number, dr: number, dc: number) => {
-    const { boxW, boxH } = getBoxGeometry(size);
-    const standardSizes = [4, 6, 8, 9, 10, 12, 15, 16];
-    const isJigsaw = !standardSizes.includes(size);
+  const addGrid = (r: number, c: number, pivotR: number, pivotC: number, dr: number, dc: number) => {
     const nextIdNum = puzzle.grids.length + 1;
     const nextId = `g${nextIdNum}`;
 
@@ -133,14 +104,10 @@ export function BoardProvider({ children }: { children: ReactNode }) {
       id: nextId,
       r,
       c,
-      size,
-      boxW,
-      boxH,
       pivotR,
       pivotC,
       dr,
-      dc,
-      isJigsaw
+      dc
     };
     setPuzzle(prev => mergeGridIntoPuzzle(prev, newGrid));
     setSelectedGridId(newGrid.id);
@@ -160,16 +127,25 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     if (selectedGridId === gridId) setSelectedGridId(null);
   };
 
-  const setJigsawMode = (gridId: string, val: boolean) => {
+  const removeAdjacentClue = (pos1: { r: number; c: number }, pos2: { r: number; c: number }) => {
     setPuzzle(prev => {
-      const grid = prev.grids.find(g => g.id === gridId);
-      if (!grid) return prev;
-      const newGrid = { ...grid, isJigsaw: val };
-      let newPuzzle: PuzzleDef = { ...prev, grids: prev.grids.map(g => g.id === gridId ? newGrid : g), cells: prev.cells, regions: [] };
-      newPuzzle.grids.forEach(g => {
-        newPuzzle = mergeGridIntoPuzzle(newPuzzle, g);
+      const nextClues = (prev.adjacentClues || []).filter(clue => {
+        const same1 = (clue.pos1.r === pos1.r && clue.pos1.c === pos1.c && clue.pos2.r === pos2.r && clue.pos2.c === pos2.c);
+        const same2 = (clue.pos1.r === pos2.r && clue.pos1.c === pos2.c && clue.pos2.r === pos1.r && clue.pos2.c === pos1.c);
+        return !(same1 || same2);
       });
-      return newPuzzle;
+      return { ...prev, adjacentClues: nextClues };
+    });
+  };
+
+  const removeSandwich = (row?: number, col?: number) => {
+    setPuzzle(prev => {
+      const nextSandwiches = (prev.sandwiches || []).filter(s => {
+        if (row !== undefined) return s.row !== row;
+        if (col !== undefined) return s.col !== col;
+        return true;
+      });
+      return { ...prev, sandwiches: nextSandwiches };
     });
   };
 
@@ -178,13 +154,17 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   return (
     <BoardContext.Provider value={{ 
       gameMode, setGameMode, isMarkerActive, 
-      gridSize, setGridSize, 
       selectedGridId, setSelectedGridId,
       isAddingGrid, setIsAddingGrid,
       placementPivot, setPlacementPivot,
-      addGrid, moveGrid, removeGrid, setJigsawMode,
+      addGrid, moveGrid, removeGrid,
       selectionMode, setSelectionMode,
-      puzzle, setPuzzle 
+      puzzle, setPuzzle,
+      activeClueType, setActiveClueType,
+      activeClueSubType, setActiveClueSubType,
+      clueSelectionFirst, setClueSelectionFirst,
+      removeAdjacentClue, removeSandwich,
+      sandwichSum, setSandwichSum
     }}>
       {children}
     </BoardContext.Provider>
