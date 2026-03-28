@@ -57,7 +57,12 @@ export function mergeGridIntoPuzzle(puzzle: PuzzleDef, grid: GridDef): PuzzleDef
             regionCells.push({ r: grid.r + boxR * grid.boxH + i, c: grid.c + boxC * grid.boxW + j });
           }
         }
-        newRegions.push({ cells: regionCells, gridId: grid.id });
+        newRegions.push({ 
+          id: `box-${grid.id}-${boxR}_${boxC}`,
+          type: 'box',
+          cells: regionCells, 
+          gridId: grid.id 
+        });
       }
     }
   }

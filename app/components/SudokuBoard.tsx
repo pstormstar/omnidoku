@@ -24,15 +24,23 @@ export default function SudokuBoard() {
   
   const containerRef = useRef<HTMLDivElement>(null);
 
-  let minR = 0, maxR = 9, minC = 0, maxC = 9;
+  let minR = 0, maxR = gridSize - 1, minC = 0, maxC = gridSize - 1;
   const cellKeys = Object.keys(puzzle.cells);
-  if (cellKeys.length > 0) {
+  if (cellKeys.length > 0 || puzzle.grids.length > 0) {
     minR = Infinity; maxR = -Infinity; minC = Infinity; maxC = -Infinity;
+    
+    // Include all cells
     cellKeys.forEach(k => {
       const [rStr, cStr] = k.split(",");
       const r = parseInt(rStr, 10), c = parseInt(cStr, 10);
       if (r < minR) minR = r; if (r > maxR) maxR = r;
       if (c < minC) minC = c; if (c > maxC) maxC = c;
+    });
+
+    // Also include all grid bounds in case some grids are empty
+    puzzle.grids.forEach(g => {
+      if (g.r < minR) minR = g.r; if (g.r + g.size - 1 > maxR) maxR = g.r + g.size - 1;
+      if (g.c < minC) minC = g.c; if (g.c + g.size - 1 > maxC) maxC = g.c + g.size - 1;
     });
   }
 
@@ -129,9 +137,10 @@ export default function SudokuBoard() {
     } else { setSelectedCell({ r, c }); }
   };
 
-  const boardWidth = (maxC - minC + 1) * cellSize;
-  const boardHeight = (maxR - minR + 1) * cellSize;
-
+  const buffer = 10;
+  const boardWidth = (maxC - minC + 1) * cellSize + buffer;
+  const boardHeight = (maxR - minR + 1) * cellSize + buffer;
+  
   return (
     <div
       ref={containerRef}
@@ -157,9 +166,10 @@ export default function SudokuBoard() {
         }}
       >
         <svg 
+          id="omnidoku-puzzle-svg"
           width={boardWidth} height={boardHeight} className="overflow-visible" 
-          viewBox={`${minC * cellSize} ${minR * cellSize} ${boardWidth} ${boardHeight}`}
-          style={{ position: 'absolute', left: `${minC * cellSize}px`, top: `${minR * cellSize}px`, vectorEffect: 'non-scaling-stroke' }}
+          viewBox={`${minC * cellSize - buffer/2} ${minR * cellSize - buffer/2} ${boardWidth} ${boardHeight}`}
+          style={{ position: 'absolute', left: `${minC * cellSize - buffer/2}px`, top: `${minR * cellSize - buffer/2}px`, vectorEffect: 'non-scaling-stroke' }}
         >
           <g>
             {Object.entries(puzzle.cells).map(([key, cell]: [string, any]) => {
@@ -191,12 +201,30 @@ export default function SudokuBoard() {
               <rect x={ghostPos.c * cellSize} y={ghostPos.r * cellSize} width={gridSize * cellSize} height={gridSize * cellSize} fill="rgba(20, 184, 166, 0.1)" stroke="#14b8a6" strokeWidth={2} strokeDasharray="5 5" className="pointer-events-none animate-pulse" />
             )}
             {isAddingGrid && placementPivot && (
-              <g className="pointer-events-none">
-                <rect x={placementPivot.c * cellSize} y={placementPivot.r * cellSize} width={cellSize} height={cellSize} fill="none" stroke="#ef4444" strokeWidth={4} />
+              <g>
+                <rect x={placementPivot.c * cellSize} y={placementPivot.r * cellSize} width={cellSize} height={cellSize} fill="none" stroke="#ef4444" strokeWidth={4} className="pointer-events-none" />
                 {[-1, 1].map(dr => [-1, 1].map(dc => {
                   const x = (placementPivot.c + dc) * cellSize, y = (placementPivot.r + dr) * cellSize;
                   return (
-                    <g key={`${dr}-${dc}`}>
+                    <g 
+                      key={`${dr}-${dc}`} 
+                      className="cursor-pointer group/arrow"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const startR = dr === -1 ? placementPivot.r - gridSize + 1 : placementPivot.r;
+                        const startC = dc === -1 ? placementPivot.c - gridSize + 1 : placementPivot.c;
+                        addGrid(startR, startC, gridSize, placementPivot.r, placementPivot.c, dr, dc);
+                        setPlacementPivot(null);
+                      }}
+                      onMouseEnter={() => {
+                        const startR = dr === -1 ? placementPivot.r - gridSize + 1 : placementPivot.r;
+                        const startC = dc === -1 ? placementPivot.c - gridSize + 1 : placementPivot.c;
+                        setGhostPos({ r: startR, c: startC });
+                      }}
+                      onMouseLeave={() => setGhostPos(null)}
+                    >
+                      {/* Invisible hit target for better ergonomics */}
+                      <rect x={x} y={y} width={cellSize} height={cellSize} fill="transparent" />
                       <path 
                         d={`M ${x + cellSize / 2 - dc * 10} ${y + cellSize / 2 - dr * 10} L ${x + cellSize / 2 + dc * 10} ${y + cellSize / 2 + dr * 10} M ${x + cellSize / 2 + dc * 10 - dc * 5 + dr * 5} ${y + cellSize / 2 + dr * 10 - dr * 5 - dc * 5} L ${x + cellSize / 2 + dc * 10} ${y + cellSize / 2 + dr * 10} L ${x + cellSize / 2 + dc * 10 - dc * 5 - dr * 5} ${y + cellSize / 2 + dr * 10 - dr * 5 + dc * 5}`} 
                         stroke="#ef4444" 
@@ -204,7 +232,7 @@ export default function SudokuBoard() {
                         strokeLinecap="round" 
                         strokeLinejoin="round" 
                         fill="none"
-                        className="animate-arrow-pivot"
+                        className="animate-arrow-pivot group-hover/arrow:stroke-teal-500 transition-colors"
                         style={{ "--move-dx": dc, "--move-dy": dr } as React.CSSProperties}
                       />
                     </g>

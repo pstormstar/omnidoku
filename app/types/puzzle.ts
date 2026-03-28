@@ -10,9 +10,13 @@ export interface CellData {
   candidates?: number[];
 }
 
+export type RegionType = 'box' | 'row' | 'column' | 'jigsaw' | 'variant' | 'extra';
+
 export interface Region {
+  id: string; // Unique identifier for the constraint
+  type: RegionType;
   cells: Position[];
-  gridId?: string; // Opt-in parent board association
+  gridId?: string; // Optional: The board that "owns" this constraint
 }
 
 export interface Thermometer {

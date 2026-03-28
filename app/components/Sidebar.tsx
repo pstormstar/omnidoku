@@ -1,28 +1,36 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useBoard } from "../context/BoardContext";
 
-const TABS = ["General", "Categories", "Support"] as const;
+const TABS = ["General", "Clues", "Support"] as const;
 type Tab = (typeof TABS)[number];
 
+const CLUE_SUBTABS = ["region", "adjacent", "outside", "global"] as const;
+type ClueSubtab = (typeof CLUE_SUBTABS)[number];
+
 const STANDARD_SIZES = [4, 6, 8, 9, 10, 12, 15, 16];
-const IRREGULAR_SIZES = [5, 7, 11, 13, 14];
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<Tab>("General");
+  const [activeClueSubtab, setActiveClueSubtab] = useState<ClueSubtab>("region");
+  
   const {
     gameMode, gridSize, setGridSize,
     puzzle, selectedGridId, setSelectedGridId,
     isAddingGrid, setIsAddingGrid,
     selectionMode, setSelectionMode,
-    removeGrid, setJigsawMode
+    removeGrid
   } = useBoard();
   const [isMinimized, setIsMinimized] = useState(false);
   const [width, setWidth] = useState(33); // Starting with 33%
   const [isDragging, setIsDragging] = useState(false);
+  
   const [validationResult, setValidationResult] = useState<{ valid: boolean; message: string; details?: string } | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  
+  const [uniqueResult, setUniqueResult] = useState<{ status: string; message: string; details?: string } | null>(null);
+  const [isCheckingUnique, setIsCheckingUnique] = useState(false);
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isResizing = useRef(false);
@@ -71,6 +79,26 @@ export default function Sidebar() {
     setIsValidating(false);
   };
 
+  const handleCheckUnique = async () => {
+    setIsCheckingUnique(true);
+    try {
+      const res = await fetch("/api/check_unique", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(puzzle)
+      });
+      const data = await res.json();
+      setUniqueResult({ 
+        status: data.status, 
+        message: data.message,
+        details: data.output || ""
+      });
+    } catch (err) {
+      setUniqueResult({ status: "error", message: "Search Failed", details: "Failed to connect to the uniqueness solver." });
+    }
+    setIsCheckingUnique(false);
+  };
+
   if (isPlayMode) {
     return (
       <aside className="w-10 border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 flex items-center justify-center relative overflow-hidden group hover:w-48 transition-all duration-500">
@@ -80,10 +108,6 @@ export default function Sidebar() {
       </aside>
     );
   }
-
-  const selectedGrid = puzzle.grids.find(g => g.id === selectedGridId);
-  const isStandardVariant = selectedGrid ? !selectedGrid.isJigsaw : true;
-  const isCurrentSizeStandard = STANDARD_SIZES.includes(gridSize);
 
   return (
     <aside
@@ -143,20 +167,36 @@ export default function Sidebar() {
                 You are currently in <strong>Design Mode</strong> (see top bar). Use these tools to build your multisudoku.
               </p>
 
-              {/* Validation Button */}
-              <button
-                onClick={handleValidate}
-                disabled={isValidating}
-                title="Run the Python validity script on the current board."
-                className="w-full py-3 rounded-xl bg-violet-500 hover:bg-violet-600 active:scale-95 disabled:opacity-50 transition-all text-white text-[10px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 shadow-sm"
-              >
-                {isValidating ? (
-                   <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx={12} cy={12} r={10} strokeOpacity={0.2}/><path d="M12 2a10 10 0 0110 10" /></svg>
-                ) : (
-                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
-                )}
-                CHECK PUZZLE VALIDITY
-              </button>
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleValidate}
+                  disabled={isValidating}
+                  title="Check if the current digits follow standard Sudoku rules."
+                  className="py-3 rounded-xl bg-violet-500 hover:bg-violet-600 active:scale-95 disabled:opacity-50 transition-all text-white text-[9px] font-black tracking-widest uppercase flex flex-col items-center justify-center gap-1.5 shadow-sm"
+                >
+                  {isValidating ? (
+                    <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx={12} cy={12} r={10} strokeOpacity={0.2}/><path d="M12 2a10 10 0 0110 10" /></svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
+                  )}
+                  CHECK VALIDITY
+                </button>
+
+                <button
+                  onClick={handleCheckUnique}
+                  disabled={isCheckingUnique}
+                  title="Analyze the puzzle to see if it has exactly one solution."
+                  className="py-3 rounded-xl bg-teal-500 hover:bg-teal-600 active:scale-95 disabled:opacity-50 transition-all text-white text-[9px] font-black tracking-widest uppercase flex flex-col items-center justify-center gap-1.5 shadow-sm"
+                >
+                  {isCheckingUnique ? (
+                    <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx={12} cy={12} r={10} strokeOpacity={0.2}/><path d="M12 2a10 10 0 0110 10" /></svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
+                  )}
+                  CHECK UNIQUE
+                </button>
+              </div>
 
               {/* Selection Mode Toggle */}
               <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl relative">
@@ -193,63 +233,43 @@ export default function Sidebar() {
                   </span>
                 </div>
 
-                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
-                  {puzzle.grids.map((grid) => {
-                    // Precise region detection per grid
-                    const hasRegionsDefined = puzzle.regions.some(r => 
-                      r.gridId === grid.id || 
-                      (!r.gridId && r.cells?.some(c => 
-                        c.r >= grid.r && c.r < grid.r + grid.size &&
-                        c.c >= grid.c && c.c < grid.c + grid.size
-                      ))
-                    );
-                    const needsWarning = grid.isJigsaw && !hasRegionsDefined;
-
-                    return (
-                      <button
-                        key={grid.id}
-                        onClick={() => {
-                          const nextId = selectedGridId === grid.id ? null : grid.id;
-                          setSelectedGridId(nextId);
-                          if (nextId) setSelectionMode("grid");
-                        }}
-                        title={needsWarning ? `Warning: Jigsaw regions have not been defined for this grid.` : `Select ${grid.id} to resize or move it.`}
-                        className={`w-full p-3 rounded-xl border-2 transition-all flex items-center justify-between group active:scale-[0.98] ${selectedGridId === grid.id
-                            ? "bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-50 dark:border-zinc-50 dark:text-zinc-900 shadow-md"
-                            : "bg-white border-zinc-100 text-zinc-500 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-700"
-                          }`}
-                      >
-                        <div className="flex-1 flex items-center gap-3">
-                          <div className="flex flex-col items-start translate-x-0 group-hover:translate-x-1 transition-transform">
-                            <span className="text-xs font-black uppercase tracking-wider">
-                              {grid.size}x{grid.size} • {grid.isJigsaw ? "JIGSAW" : "STANDARD"}
-                            </span>
-                          </div>
-                          {needsWarning && (
-                            <div className="animate-pulse bg-amber-500/10 p-1 rounded-md">
-                               <svg className="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                               </svg>
-                            </div>
-                          )}
+                <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
+                  {puzzle.grids.map((grid) => (
+                    <button
+                      key={grid.id}
+                      onClick={() => {
+                        const nextId = selectedGridId === grid.id ? null : grid.id;
+                        setSelectedGridId(nextId);
+                        if (nextId) setSelectionMode("grid");
+                      }}
+                      className={`w-full p-4 rounded-xl border-2 transition-all flex items-center justify-between group active:scale-[0.98] ${selectedGridId === grid.id
+                          ? "bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-50 dark:border-zinc-50 dark:text-zinc-900 shadow-xl"
+                          : "bg-white border-zinc-100 text-zinc-500 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-700"
+                        }`}
+                    >
+                      <div className="flex-1 flex items-center gap-3">
+                        <div className="flex flex-col items-start translate-x-0 group-hover:translate-x-1 transition-transform">
+                          <span className="text-sm font-black uppercase tracking-widest">
+                            {grid.size}x{grid.size}
+                          </span>
                         </div>
-                        {puzzle.grids.length > 1 && (
-                          <div 
-                            className={`p-1.5 rounded-lg border-2 transition-all hover:bg-rose-500 hover:border-rose-500 hover:text-white ${selectedGridId === grid.id ? "border-white/20 bg-white/10" : "border-zinc-100 dark:border-zinc-800"}`}
-                            title="Remove this grid from the board"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeGrid(grid.id);
-                            }}
-                          >
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}/>
-                            </svg>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+                      </div>
+                      {puzzle.grids.length > 1 && (
+                        <div 
+                          className={`p-1.5 rounded-lg border-2 transition-all hover:bg-rose-500 hover:border-rose-500 hover:text-white ${selectedGridId === grid.id ? "border-white/20 bg-white/10" : "border-zinc-100 dark:border-zinc-800"}`}
+                          title="Remove this grid from the board"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeGrid(grid.id);
+                          }}
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}/>
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  ))}
                 </div>
 
                 {selectionMode === "grid" ? (
@@ -288,73 +308,19 @@ export default function Sidebar() {
                       <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1">
                         Select Board Size
                       </label>
-                      
-                      {/* Standard Sizes Row */}
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                           <span className="text-[8px] font-bold text-zinc-400 uppercase">Standard Sizes</span>
-                           {isCurrentSizeStandard && <span className="text-[8px] font-black text-emerald-500">Active</span>}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                           {STANDARD_SIZES.map(size => (
-                             <button
-                               key={size}
-                               onClick={() => setGridSize(size)}
-                               className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${gridSize === size 
-                                 ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 scale-105" 
-                                 : "bg-zinc-50 text-zinc-400 border border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"}`}
-                             >
-                               {size}x{size}
-                             </button>
-                           ))}
-                        </div>
+                      <div className="grid grid-cols-4 gap-2">
+                         {STANDARD_SIZES.map(size => (
+                           <button
+                             key={size}
+                             onClick={() => setGridSize(size)}
+                             className={`py-3 rounded-lg text-xs font-black transition-all ${gridSize === size 
+                               ? "bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 scale-105" 
+                               : "bg-zinc-50 text-zinc-500 border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 hover:border-zinc-300"}`}
+                           >
+                             {size}
+                           </button>
+                         ))}
                       </div>
-
-                      {/* Irregular Sizes Row */}
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                           <span className="text-[8px] font-bold text-zinc-400 uppercase">Irregular Sizes</span>
-                           {!isCurrentSizeStandard && <span className="text-[8px] font-black text-violet-500">Active</span>}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                           {IRREGULAR_SIZES.map(size => (
-                             <button
-                               key={size}
-                               onClick={() => setGridSize(size)}
-                               className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${gridSize === size 
-                                 ? "bg-violet-500 text-white shadow-lg shadow-violet-500/20 scale-105" 
-                                 : "bg-zinc-50 text-zinc-400 border border-zinc-100 hover:border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"}`}
-                             >
-                               {size}x{size}
-                             </button>
-                           ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className={`grid ${isCurrentSizeStandard ? 'grid-cols-2' : 'grid-cols-1'} gap-2 pt-2`}>
-                       {isCurrentSizeStandard && (
-                          <button
-                             className={`py-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-lg shadow-zinc-950/20 flex items-center justify-center gap-2 ${
-                               isStandardVariant 
-                                 ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:scale-[1.02] active:scale-95"
-                                 : "bg-white text-zinc-400 border-2 border-zinc-100 dark:bg-zinc-900 dark:text-zinc-500 dark:border-zinc-800 hover:border-zinc-300 active:scale-95"
-                             }`}
-                             onClick={() => { if (selectedGridId) setJigsawMode(selectedGridId, false); }}
-                          >
-                             STANDARD
-                          </button>
-                       )}
-                       <button
-                          className={`py-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-lg shadow-zinc-950/20 flex items-center justify-center gap-2 ${
-                            !isStandardVariant 
-                            ? "bg-violet-600 text-white hover:scale-[1.02] active:scale-95 shadow-violet-500/20"
-                            : "bg-white text-zinc-400 border-2 border-zinc-100 dark:bg-zinc-900 dark:text-zinc-500 dark:border-zinc-800 hover:border-zinc-300 active:scale-95"
-                          }`}
-                          onClick={() => { if (selectedGridId) setJigsawMode(selectedGridId, true); }}
-                       >
-                          CREATE JIGSAW
-                       </button>
                     </div>
                   </div>
                 </div>
@@ -363,17 +329,61 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* Categories Tab */}
-        {activeTab === "Categories" && (
-          <div className="space-y-6">
-             <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4">
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-full text-zinc-400">
-                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
-                </div>
-                <div>
-                   <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Category Tags</h4>
-                   <p className="text-[10px] text-zinc-500 mt-1 max-w-[150px]">Variants and categories will be listed here in a future update.</p>
-                </div>
+        {/* Clues Tab */}
+        {activeTab === "Clues" && (
+          <div className="space-y-6 flex flex-col h-full">
+             <div className="flex border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex-shrink-0 -mx-6 mb-4 overflow-x-auto no-scrollbar">
+                {CLUE_SUBTABS.map((subtab) => (
+                  <button
+                    key={subtab}
+                    onClick={() => setActiveClueSubtab(subtab)}
+                    className={`flex-1 min-w-[80px] py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${activeClueSubtab === subtab
+                        ? "border-zinc-900 text-zinc-900 dark:border-zinc-50 dark:text-zinc-50"
+                        : "border-transparent text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+                      }`}
+                  >
+                    {subtab}
+                  </button>
+                ))}
+             </div>
+
+             <div className="flex-1 space-y-6 animate-in fade-in duration-300">
+                {activeClueSubtab === "region" && (
+                  <div className="space-y-4">
+                     <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Region Clues</h4>
+                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4">
+                        <svg className="w-8 h-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM9 4v16m6-16v16M4 9h16M4 15h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
+                        <p className="text-[10px] text-zinc-500 font-medium leading-relaxed max-w-[150px]">Custom Jigsaw and Killer Region tools will appear here.</p>
+                     </div>
+                  </div>
+                )}
+                {activeClueSubtab === "adjacent" && (
+                  <div className="space-y-4">
+                     <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Adjacent Clues</h4>
+                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4">
+                        <svg className="w-8 h-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 7h8M8 12h8m-8 5h8" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
+                        <p className="text-[10px] text-zinc-500 font-medium leading-relaxed max-w-[150px]">Kropki Dots, XV Clues, and White/Black dots will appear here.</p>
+                     </div>
+                  </div>
+                )}
+                {activeClueSubtab === "outside" && (
+                  <div className="space-y-4">
+                     <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Outside Clues</h4>
+                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4">
+                        <svg className="w-8 h-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
+                        <p className="text-[10px] text-zinc-500 font-medium leading-relaxed max-w-[150px]">Sandwich Sudoku and Little Killer Arrow tools will appear here.</p>
+                     </div>
+                  </div>
+                )}
+                {activeClueSubtab === "global" && (
+                  <div className="space-y-4">
+                     <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Global Constraints</h4>
+                     <div className="p-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl flex flex-col items-center text-center gap-4">
+                        <svg className="w-8 h-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/></svg>
+                        <p className="text-[10px] text-zinc-500 font-medium leading-relaxed max-w-[150px]">Anti-King, Anti-Knight, and Non-Consecutive constraints.</p>
+                     </div>
+                  </div>
+                )}
              </div>
           </div>
         )}
@@ -391,7 +401,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Centered Validation Feedback Modal */}
+      {/* Validity Feedback Modal */}
       {validationResult && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/20 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
@@ -428,6 +438,50 @@ export default function Sidebar() {
 
               <button 
                 onClick={() => setValidationResult(null)}
+                className="w-full py-3 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-black tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-zinc-950/10"
+              >
+                GOT IT
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Uniqueness Feedback Modal */}
+      {uniqueResult && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/20 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className={`p-8 flex flex-col items-center gap-6 ${uniqueResult.status === "unique" ? "bg-teal-500/5" : "bg-amber-500/5"}`}>
+              <div className={`p-4 rounded-full ${uniqueResult.status === "unique" ? "bg-teal-500" : "bg-amber-500"} shadow-lg shadow-zinc-950/20`}>
+                {uniqueResult.status === "unique" ? (
+                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                )}
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight uppercase">
+                  {uniqueResult.status.replace('_', ' ').toUpperCase()} RESULT
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 font-medium px-4">
+                  {uniqueResult.message}
+                </p>
+              </div>
+
+              {uniqueResult.details && (
+                <div className="w-full max-h-[120px] overflow-y-auto p-3 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800 rounded-xl">
+                   <pre className="text-[10px] text-zinc-600 dark:text-zinc-400 font-mono whitespace-pre-wrap leading-tight">
+                      {uniqueResult.details}
+                   </pre>
+                </div>
+              )}
+
+              <button 
+                onClick={() => setUniqueResult(null)}
                 className="w-full py-3 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-black tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-zinc-950/10"
               >
                 GOT IT

@@ -126,29 +126,24 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     const { boxW, boxH } = getBoxGeometry(size);
     const standardSizes = [4, 6, 8, 9, 10, 12, 15, 16];
     const isJigsaw = !standardSizes.includes(size);
-    setPuzzle(prev => {
-      const existingIds = prev.grids.map(g => parseInt(g.id.replace('g', '')) || 0);
-      const nextIdNum = Math.max(0, ...existingIds) + 1;
-      const nextId = `g${nextIdNum}`;
+    const nextIdNum = puzzle.grids.length + 1;
+    const nextId = `g${nextIdNum}`;
 
-      const newGrid: GridDef = {
-        id: nextId,
-        r,
-        c,
-        size,
-        boxW,
-        boxH,
-        pivotR,
-        pivotC,
-        dr,
-        dc,
-        isJigsaw
-      };
-
-      const nextPuzzle = mergeGridIntoPuzzle(prev, newGrid);
-      setSelectedGridId(nextId);
-      return nextPuzzle;
-    });
+    const newGrid: GridDef = {
+      id: nextId,
+      r,
+      c,
+      size,
+      boxW,
+      boxH,
+      pivotR,
+      pivotC,
+      dr,
+      dc,
+      isJigsaw
+    };
+    setPuzzle(prev => mergeGridIntoPuzzle(prev, newGrid));
+    setSelectedGridId(newGrid.id);
     setIsAddingGrid(false);
   };
 

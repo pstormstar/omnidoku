@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 import Sidebar from "./components/Sidebar";
 import GameModeToggle from "./components/GameModeToggle";
 import PuzzleControls from "./components/PuzzleControls";
+import PublishMenu from "./components/PublishMenu";
 import { BoardProvider } from "./context/BoardContext";
 
 export const metadata: Metadata = {
@@ -43,6 +44,7 @@ export default function RootLayout({
               <div className="flex items-center gap-4">
                 <PuzzleControls />
                 <GameModeToggle />
+                <PublishMenu />
               </div>
             </div>
           </header>
