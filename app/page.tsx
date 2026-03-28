@@ -1,7 +1,11 @@
+"use client";
+
+import SudokuBoard from "./components/SudokuBoard";
+
 export default function Home() {
   return (
-    <main className="flex-1">
-      {/* Content will go here later */}
-    </main>
+    <div className="flex-1 w-full h-full">
+      <SudokuBoard />
+    </div>
   );
 }
